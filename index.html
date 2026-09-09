@@ -13,7 +13,7 @@
     <header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl shadow-sm border border-gray-200 gap-4">
       <div>
         <h1 class="text-2xl font-bold text-gray-800">💰 Financiën Tim & Veerle</h1>
-        <p class="text-sm text-gray-500">Overzicht, vergelijking & slimme historie</p>
+        <p class="text-sm text-gray-500">Overzicht, vergelijking & automatische vaste lasten</p>
       </div>
 
       <!-- Filters: Rekening & Maand -->
@@ -74,9 +74,15 @@
     <!-- Formulier & Categorie Ranglijst -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       
-      <!-- Transactie Invoeren -->
+      <!-- Transactie Invoeren + Slimme Kopieerknop -->
       <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h2 class="text-lg font-bold mb-4 text-gray-700">Nieuwe Transactie</h2>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-bold text-gray-700">Nieuwe Transactie</h2>
+          <button onclick="kopieerVasteLasten()" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 py-1.5 rounded-lg border transition">
+            🔄 Vaste lasten kopiëren
+          </button>
+        </div>
+
         <form id="transactionForm" class="space-y-4">
           
           <div class="grid grid-cols-2 gap-2">
@@ -196,7 +202,7 @@
         </table>
       </div>
 
-      <!-- NIEUW: Paginering Boven/Onder Controls -->
+      <!-- Paginering Controls -->
       <div class="p-4 border-t border-gray-100 flex justify-between items-center bg-gray-50 text-xs text-gray-500">
         <span id="pageInfo">Transacties tonen...</span>
         <div class="flex items-center gap-2">
@@ -213,9 +219,15 @@
     let transactions = JSON.parse(localStorage.getItem('financien_tim_veerle')) || [];
     let activeAccountFilter = 'Totaal';
     
-    // Paginering variabelen
     let currentPage = 1;
-    const itemsPerPage = 10; // Aantal regels per pagina
+    const itemsPerPage = 10;
+
+    // Vaste lasten categorieën die we willen kopieëren
+    const fixedCategories = [
+      'Afbetaling Auto', 'Persoonlijke Lening', 'Krediet / Visakaart',
+      'Huur / Hypotheek', 'Gas / Water / Licht', 'Verzekeringen', 
+      'Internet & Telefonie', 'Abonnementen', 'Salaris / Inkomsten'
+    ];
 
     document.getElementById('date').valueAsDate = new Date();
 
@@ -239,9 +251,47 @@
       document.getElementById('amount').value = '';
     });
 
+    // NIEUW: Functie om vaste lasten van de recentste maand over te nemen naar de huidige datum
+    function kopieerVasteLasten() {
+      if (transactions.length === 0) {
+        alert("Er zijn nog geen eerdere transacties om te kopiëren.");
+        return;
+      }
+
+      // Zoek de meest recente unieke maand
+      const months = Array.from(new Set(transactions.map(t => t.date.substring(0, 7)))).sort().reverse();
+      const lastMonth = months[0];
+
+      // Filter alle vaste lasten uit die maand
+      const fixedTxs = transactions.filter(t => t.date.startsWith(lastMonth) && fixedCategories.includes(t.category));
+
+      if (fixedTxs.length === 0) {
+        alert(`Geen vaste lasten gevonden in de periode ${lastMonth}.`);
+        return;
+      }
+
+      const todayStr = new Date().toISOString().substring(0, 10);
+
+      if (confirm(`Wil je ${fixedTxs.length} vaste lasten van ${lastMonth} kopiëren naar vandaag (${todayStr})?`)) {
+        fixedTxs.forEach(t => {
+          transactions.push({
+            id: Date.now() + Math.random(),
+            date: todayStr,
+            account: t.account,
+            description: t.description,
+            amount: t.amount,
+            type: t.type,
+            category: t.category
+          });
+        });
+        saveAndRender();
+        alert("Vaste lasten succesvol gekopieerd!");
+      }
+    }
+
     function setFilter(filter) {
       activeAccountFilter = filter;
-      currentPage = 1; // Reset naar eerste pagina
+      currentPage = 1;
       
       ['Totaal', 'Rekening Tim', 'Rekening Veerle'].forEach(f => {
         const btnId = f === 'Totaal' ? 'btnTotaal' : (f === 'Rekening Tim' ? 'btnTim' : 'btnVeerle');
@@ -336,7 +386,6 @@
         return;
       }
 
-      // Paginering uitsnede maken (bijv. 0-10, 10-20, etc.)
       const startIndex = (currentPage - 1) * itemsPerPage;
       const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
       const paginatedItems = filtered.slice(startIndex, endIndex);
@@ -365,7 +414,6 @@
         tbody.appendChild(row);
       });
 
-      // Update Paginering status
       document.getElementById('pageInfo').innerText = `Toont ${startIndex + 1} - ${endIndex} van ${totalItems} transacties`;
       document.getElementById('pageNumber').innerText = `Pagina ${currentPage} van ${totalPages}`;
       document.getElementById('btnPrev').disabled = currentPage === 1;
