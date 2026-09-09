@@ -45,7 +45,7 @@
       </div>
     </div>
 
-    <!-- Formulier & Vergelijking/Grafiek -->
+    <!-- Formulier & Grafiek -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       
       <!-- Transactie Invoeren -->
@@ -69,7 +69,7 @@
 
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">Omschrijving</label>
-            <input type="text" id="description" placeholder="bijv. Boodschappen, Tanken, Netflix" required class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <input type="text" id="description" placeholder="bijv. Afbetaling auto, Boodschappen, Tanken" required class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
           </div>
 
           <div class="grid grid-cols-2 gap-2">
@@ -89,6 +89,11 @@
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">Categorie</label>
             <select id="category" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+              <optgroup label="💳 Leningen & Afbetalingen">
+                <option value="Afbetaling Auto">Afbetaling Auto</option>
+                <option value="Persoonlijke Lening">Persoonlijke Lening</option>
+                <option value="Krediet / Visakaart">Krediet / Visakaart</option>
+              </optgroup>
               <optgroup label="🏠 Wonen & Vaste Lasten">
                 <option value="Huur / Hypotheek">Huur / Hypotheek</option>
                 <option value="Gas / Water / Licht">Gas / Water / Licht</option>
@@ -103,7 +108,7 @@
               <optgroup label="🚗 Transport & Auto">
                 <option value="Brandstof / Opladen">Brandstof / Opladen</option>
                 <option value="OV / Trein / Bus">OV / Trein / Bus</option>
-                <option value="Auto onderhoud">Auto onderhoud</option>
+                <option value="Auto onderhoud / Belasting">Auto onderhoud / Belasting</option>
               </optgroup>
               <optgroup label="🎉 Vrije Tijd & Ontspanning">
                 <option value="Horeca & Restaurants">Horeca & Restaurants</option>
@@ -193,7 +198,6 @@
     function setFilter(filter) {
       activeFilter = filter;
       
-      // Update knop stijlen
       ['Totaal', 'Rekening Tim', 'Rekening Veerle'].forEach(f => {
         const btnId = f === 'Totaal' ? 'btnTotaal' : (f === 'Rekening Tim' ? 'btnTim' : 'btnVeerle');
         const btn = document.getElementById(btnId);
@@ -267,7 +271,6 @@
         if (t.account === 'Rekening Tim') balTim += val;
         if (t.account === 'Rekening Veerle') balVeerle += val;
 
-        // Uitgaven berekenen op basis van de actieve filter
         if (t.type === 'uitgave' && t.category !== 'Overschrijving Tim <-> Veerle') {
           if (activeFilter === 'Totaal' || t.account === activeFilter) {
             filteredExpenses += t.amount;
@@ -305,7 +308,7 @@
           datasets: [{
             data: Object.values(categoryTotals),
             backgroundColor: [
-              '#3b82f6', '#8b5cf6', '#ef4444', '#f59e0b', '#10b981', 
+              '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#10b981', 
               '#ec4899', '#6366f1', '#14b8a6', '#f97316', '#84cc16'
             ]
           }]
