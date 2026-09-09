@@ -13,14 +13,23 @@
     <header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl shadow-sm border border-gray-200 gap-4">
       <div>
         <h1 class="text-2xl font-bold text-gray-800">💰 Financiën Tim & Veerle</h1>
-        <p class="text-sm text-gray-500">Helder overzicht zonder ingewikkelde grafieken</p>
+        <p class="text-sm text-gray-500">Maandelijks sparen & uitgaven vergelijken</p>
       </div>
 
-      <!-- Filter Knoppen -->
-      <div class="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
-        <button onclick="setFilter('Totaal')" id="btnTotaal" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-white shadow-sm text-gray-800">Totaal (Samen)</button>
-        <button onclick="setFilter('Rekening Tim')" id="btnTim" class="px-3 py-1.5 text-xs font-semibold rounded-md text-gray-600 hover:text-gray-900">Rekening Tim</button>
-        <button onclick="setFilter('Rekening Veerle')" id="btnVeerle" class="px-3 py-1.5 text-xs font-semibold rounded-md text-gray-600 hover:text-gray-900">Rekening Veerle</button>
+      <!-- Filters: Rekening & Maand -->
+      <div class="flex flex-wrap items-center gap-3">
+        <!-- Maand Selectie -->
+        <select id="monthFilter" onchange="renderAll()" class="bg-gray-100 border border-gray-300 text-gray-800 text-xs rounded-lg p-2 font-semibold outline-none">
+          <option value="ALL">🗓️ Alle Maanden</option>
+          <!-- Maanden worden automatisch aangevuld -->
+        </select>
+
+        <!-- Rekening Filter -->
+        <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+          <button onclick="setFilter('Totaal')" id="btnTotaal" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-white shadow-sm text-gray-800">Totaal</button>
+          <button onclick="setFilter('Rekening Tim')" id="btnTim" class="px-3 py-1.5 text-xs font-semibold rounded-md text-gray-600 hover:text-gray-900">Tim</button>
+          <button onclick="setFilter('Rekening Veerle')" id="btnVeerle" class="px-3 py-1.5 text-xs font-semibold rounded-md text-gray-600 hover:text-gray-900">Veerle</button>
+        </div>
       </div>
     </header>
 
@@ -35,16 +44,39 @@
         <p id="balVeerle" class="text-2xl font-bold text-purple-600">€0,00</p>
       </div>
       <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-red-500">
-        <span class="text-xs font-semibold text-gray-400 uppercase">Uitgaven (<span id="lblFilterExp">Totaal</span>)</span>
+        <span class="text-xs font-semibold text-gray-400 uppercase">Uitgaven (<span id="lblFilterExp">Geselecteerd</span>)</span>
         <p id="totalExpenses" class="text-2xl font-bold text-red-600">€0,00</p>
       </div>
       <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-green-500">
-        <span class="text-xs font-semibold text-gray-400 uppercase">Totaal Saldo</span>
+        <span class="text-xs font-semibold text-gray-400 uppercase">Gespaard (<span id="lblFilterMonth">Periode</span>)</span>
         <p id="totalNet" class="text-2xl font-bold text-green-600">€0,00</p>
       </div>
     </div>
 
-    <!-- Formulier & Duidelijke Categorie Ranglijst -->
+    <!-- NIEUW: Maand-op-Maand Vergelijking -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+      <h2 class="text-lg font-bold text-gray-700 mb-1">📊 Spaaroverzicht per Maand</h2>
+      <p class="text-xs text-gray-400 mb-4">Vergelijk je inkomsten, uitgaven en spaarbedrag van maand tot maand</p>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-gray-600">
+          <thead class="bg-gray-50 text-xs uppercase text-gray-400">
+            <tr>
+              <th class="p-3">Maand</th>
+              <th class="p-3">Inkomsten (+)</th>
+              <th class="p-3">Uitgaven (-)</th>
+              <th class="p-3">Netto Gespaard</th>
+              <th class="p-3 text-right">Resultaat</th>
+            </tr>
+          </thead>
+          <tbody id="monthlyOverview" class="divide-y divide-gray-100">
+            <!-- Dynamisch gevuld -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Formulier & Categorie Ranglijst -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       
       <!-- Transactie Invoeren -->
@@ -130,11 +162,11 @@
 
       <!-- Duidelijke Uitgaven Ranglijst -->
       <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h2 class="text-lg font-bold text-gray-700 mb-1">Waar gaat het geld naartoe?</h2>
-        <p class="text-xs text-gray-400 mb-4">Rangschikking van groot naar klein (<span id="lblFilterRank">Totaal</span>)</p>
+        <h2 class="text-lg font-bold text-gray-700 mb-1">Waar ging het geld naartoe?</h2>
+        <p class="text-xs text-gray-400 mb-4">Rangschikking van geselecteerde periode</p>
 
         <div id="categoryRanking" class="space-y-4 max-h-[380px] overflow-y-auto pr-2">
-          <!-- Dynamische lijst van categorieën -->
+          <!-- Dynamische lijst -->
         </div>
       </div>
 
@@ -168,7 +200,7 @@
 
   <script>
     let transactions = JSON.parse(localStorage.getItem('financien_tim_veerle')) || [];
-    let activeFilter = 'Totaal';
+    let activeAccountFilter = 'Totaal';
 
     document.getElementById('date').valueAsDate = new Date();
 
@@ -193,12 +225,12 @@
     });
 
     function setFilter(filter) {
-      activeFilter = filter;
+      activeAccountFilter = filter;
       
       ['Totaal', 'Rekening Tim', 'Rekening Veerle'].forEach(f => {
         const btnId = f === 'Totaal' ? 'btnTotaal' : (f === 'Rekening Tim' ? 'btnTim' : 'btnVeerle');
         const btn = document.getElementById(btnId);
-        if (f === activeFilter) {
+        if (f === activeAccountFilter) {
           btn.className = "px-3 py-1.5 text-xs font-semibold rounded-md bg-white shadow-sm text-gray-800";
         } else {
           btn.className = "px-3 py-1.5 text-xs font-semibold rounded-md text-gray-600 hover:text-gray-900";
@@ -206,32 +238,64 @@
       });
 
       document.getElementById('lblFilterExp').innerText = filter;
-      document.getElementById('lblFilterRank').innerText = filter;
-
-      renderTable();
-      renderStats();
-      renderRanking();
+      renderAll();
     }
 
     function saveAndRender() {
       localStorage.setItem('financien_tim_veerle', JSON.stringify(transactions));
       transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
 
+      updateMonthDropdown();
+      renderAll();
+    }
+
+    function updateMonthDropdown() {
+      const dropdown = document.getElementById('monthFilter');
+      const selectedValue = dropdown.value;
+      dropdown.innerHTML = '<option value="ALL">🗓️ Alle Maanden</option>';
+
+      const months = new Set();
+      transactions.forEach(t => {
+        if (t.date) {
+          months.add(t.date.substring(0, 7)); // YYYY-MM
+        }
+      });
+
+      Array.from(months).sort().reverse().forEach(m => {
+        const option = document.createElement('option');
+        option.value = m;
+        option.innerText = `📅 ${m}`;
+        dropdown.appendChild(option);
+      });
+
+      dropdown.value = selectedValue || 'ALL';
+    }
+
+    function getFilteredTransactions() {
+      const selectedMonth = document.getElementById('monthFilter').value;
+
+      return transactions.filter(t => {
+        const matchAccount = activeAccountFilter === 'Totaal' || t.account === activeAccountFilter;
+        const matchMonth = selectedMonth === 'ALL' || (t.date && t.date.startsWith(selectedMonth));
+        return matchAccount && matchMonth;
+      });
+    }
+
+    function renderAll() {
       renderTable();
       renderStats();
       renderRanking();
+      renderMonthlyOverview();
     }
 
     function renderTable() {
       const tbody = document.getElementById('transactionList');
       tbody.innerHTML = '';
 
-      const filtered = activeFilter === 'Totaal' 
-        ? transactions 
-        : transactions.filter(t => t.account === activeFilter);
+      const filtered = getFilteredTransactions();
 
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Geen transacties gevonden voor ${activeFilter}.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Geen transacties gevonden voor deze selectie.</td></tr>`;
         return;
       }
 
@@ -261,24 +325,32 @@
     }
 
     function renderStats() {
-      let balTim = 0, balVeerle = 0, filteredExpenses = 0;
+      let balTim = 0, balVeerle = 0;
+      let expFiltered = 0, incFiltered = 0;
+
+      const selectedMonth = document.getElementById('monthFilter').value;
 
       transactions.forEach(t => {
         const val = t.type === 'inkomst' ? t.amount : -t.amount;
         if (t.account === 'Rekening Tim') balTim += val;
         if (t.account === 'Rekening Veerle') balVeerle += val;
+      });
 
-        if (t.type === 'uitgave' && t.category !== 'Overschrijving Tim <-> Veerle') {
-          if (activeFilter === 'Totaal' || t.account === activeFilter) {
-            filteredExpenses += t.amount;
-          }
+      const filtered = getFilteredTransactions();
+      filtered.forEach(t => {
+        if (t.category !== 'Overschrijving Tim <-> Veerle') {
+          if (t.type === 'uitgave') expFiltered += t.amount;
+          if (t.type === 'inkomst') incFiltered += t.amount;
         }
       });
 
       document.getElementById('balTim').innerText = `€${balTim.toFixed(2)}`;
       document.getElementById('balVeerle').innerText = `€${balVeerle.toFixed(2)}`;
-      document.getElementById('totalExpenses').innerText = `€${filteredExpenses.toFixed(2)}`;
-      document.getElementById('totalNet').innerText = `€${(balTim + balVeerle).toFixed(2)}`;
+      document.getElementById('totalExpenses').innerText = `€${expFiltered.toFixed(2)}`;
+      
+      const savedAmount = incFiltered - expFiltered;
+      document.getElementById('totalNet').innerText = `€${savedAmount.toFixed(2)}`;
+      document.getElementById('lblFilterMonth').innerText = selectedMonth === 'ALL' ? 'Totaal' : selectedMonth;
     }
 
     function renderRanking() {
@@ -288,21 +360,17 @@
       const categoryTotals = {};
       let grandTotal = 0;
 
-      const filtered = transactions.filter(t => {
-        const isTargetAccount = activeFilter === 'Totaal' || t.account === activeFilter;
-        return isTargetAccount && t.type === 'uitgave' && t.category !== 'Overschrijving Tim <-> Veerle';
-      });
+      const filtered = getFilteredTransactions().filter(t => t.type === 'uitgave' && t.category !== 'Overschrijving Tim <-> Veerle');
 
       filtered.forEach(t => {
         categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
         grandTotal += t.amount;
       });
 
-      const sortedCategories = Object.entries(categoryTotals)
-        .sort((a, b) => b[1] - a[1]);
+      const sortedCategories = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
 
       if (sortedCategories.length === 0) {
-        container.innerHTML = `<p class="text-sm text-gray-400 text-center py-8">Nog geen uitgaven ingevoerd.</p>`;
+        container.innerHTML = `<p class="text-sm text-gray-400 text-center py-8">Geen uitgaven in deze periode.</p>`;
         return;
       }
 
@@ -324,6 +392,58 @@
       });
     }
 
+    function renderMonthlyOverview() {
+      const tbody = document.getElementById('monthlyOverview');
+      tbody.innerHTML = '';
+
+      const monthlyData = {};
+
+      transactions.forEach(t => {
+        if (!t.date || t.category === 'Overschrijving Tim <-> Veerle') return;
+        const monthKey = t.date.substring(0, 7); // YYYY-MM
+
+        if (!monthlyData[monthKey]) {
+          monthlyData[monthKey] = { income: 0, expense: 0 };
+        }
+
+        if (activeAccountFilter === 'Totaal' || t.account === activeAccountFilter) {
+          if (t.type === 'inkomst') monthlyData[monthKey].income += t.amount;
+          if (t.type === 'uitgave') monthlyData[monthKey].expense += t.amount;
+        }
+      });
+
+      const sortedMonths = Object.keys(monthlyData).sort().reverse();
+
+      if (sortedMonths.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Nog geen maandgegevens beschikbaar.</td></tr>`;
+        return;
+      }
+
+      sortedMonths.forEach(m => {
+        const inc = monthlyData[m].income;
+        const exp = monthlyData[m].expense;
+        const saved = inc - exp;
+        const isPositive = saved >= 0;
+
+        const row = document.createElement('tr');
+        row.className = "hover:bg-gray-50 transition";
+        row.innerHTML = `
+          <td class="p-3 font-semibold text-gray-800">${m}</td>
+          <td class="p-3 text-green-600 font-medium">+€${inc.toFixed(2)}</td>
+          <td class="p-3 text-red-600 font-medium">-€${exp.toFixed(2)}</td>
+          <td class="p-3 font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}">
+            €${saved.toFixed(2)}
+          </td>
+          <td class="p-3 text-right">
+            <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${isPositive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+              ${isPositive ? '🟢 Gespaard' : '🔴 Tekort'}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
     function verwijderTransactie(id) {
       transactions = transactions.filter(t => t.id !== id);
       saveAndRender();
@@ -336,7 +456,8 @@
       }
     }
 
-    saveAndRender();
+    updateMonthDropdown();
+    renderAll();
   </script>
 </body>
 </html>
