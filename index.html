@@ -129,13 +129,13 @@
         </form>
       </div>
 
-      <!-- Grafieken & Vergelijking -->
+      <!-- Duidelijkere Horizontale Grafiek -->
       <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between">
         <div>
-          <h2 class="text-lg font-bold text-gray-700 mb-1">Uitgaven per Categorie</h2>
+          <h2 class="text-lg font-bold text-gray-700 mb-1">Grootste Uitgaven (Rangschikking)</h2>
           <p class="text-xs text-gray-400 mb-4">Gefilterd op: <span id="lblFilterChart" class="font-semibold text-gray-600">Totaal</span></p>
         </div>
-        <div class="relative w-full h-64 flex items-center justify-center">
+        <div class="relative w-full h-80 flex items-center justify-center">
           <canvas id="categoryChart"></canvas>
         </div>
       </div>
@@ -296,26 +296,42 @@
         categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
       });
 
+      // Sorteer van hoogste uitgave naar laagste
+      const sortedCategories = Object.entries(categoryTotals)
+        .sort((a, b) => b[1] - a[1]);
+
+      const labels = sortedCategories.map(item => item[0]);
+      const data = sortedCategories.map(item => item[1]);
+
       const ctx = document.getElementById('categoryChart').getContext('2d');
       if (chartInstance) chartInstance.destroy();
 
-      if (Object.keys(categoryTotals).length === 0) return;
+      if (labels.length === 0) return;
 
       chartInstance = new Chart(ctx, {
-        type: 'doughnut',
+        type: 'bar',
         data: {
-          labels: Object.keys(categoryTotals),
+          labels: labels,
           datasets: [{
-            data: Object.values(categoryTotals),
-            backgroundColor: [
-              '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#10b981', 
-              '#ec4899', '#6366f1', '#14b8a6', '#f97316', '#84cc16'
-            ]
+            label: 'Uitgegeven (€)',
+            data: data,
+            backgroundColor: '#ef4444',
+            borderRadius: 6
           }]
         },
         options: {
+          indexAxis: 'y', // Maakt de staafgrafiek horizontaal
           responsive: true,
-          maintainAspectRatio: false
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false } // Geen legenda nodig bij staven
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: { callback: value => '€' + value }
+            }
+          }
         }
       });
     }
