@@ -3,45 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mijn Financiën - 2 Rekeningen</title>
+  <title>Financiën - Tim & Veerle</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-100 p-4 md:p-8 min-h-screen">
   <div class="max-w-6xl mx-auto space-y-6">
     
-    <header class="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+    <!-- Header & Filter -->
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl shadow-sm border border-gray-200 gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-gray-800">💰 Persoonlijk Financieel Overzicht</h1>
-        <p class="text-sm text-gray-500">Gedetailleerd overzicht over 2 rekeningen</p>
+        <h1 class="text-2xl font-bold text-gray-800">💰 Financiën Tim & Veerle</h1>
+        <p class="text-sm text-gray-500">Gecombineerd en individueel overzicht</p>
       </div>
-      <button onclick="wisAlles()" class="text-xs text-red-500 hover:underline">Alles wissen</button>
+
+      <!-- Filter Knoppen -->
+      <div class="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
+        <button onclick="setFilter('Totaal')" id="btnTotaal" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-white shadow-sm text-gray-800">Totaal (Samen)</button>
+        <button onclick="setFilter('Rekening Tim')" id="btnTim" class="px-3 py-1.5 text-xs font-semibold rounded-md text-gray-600 hover:text-gray-900">Rekening Tim</button>
+        <button onclick="setFilter('Rekening Veerle')" id="btnVeerle" class="px-3 py-1.5 text-xs font-semibold rounded-md text-gray-600 hover:text-gray-900">Rekening Veerle</button>
+      </div>
     </header>
 
-    <!-- Stat Kaarten per Rekening -->
+    <!-- Stat Kaarten -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-emerald-500">
-        <span class="text-xs font-semibold text-gray-400 uppercase">Rekening 1 (Zicht)</span>
-        <p id="balR1" class="text-2xl font-bold text-gray-800">€0,00</p>
+      <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-blue-500">
+        <span class="text-xs font-semibold text-gray-400 uppercase">Rekening Tim</span>
+        <p id="balTim" class="text-2xl font-bold text-blue-600">€0,00</p>
       </div>
-      <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-teal-500">
-        <span class="text-xs font-semibold text-gray-400 uppercase">Rekening 2 (Spaar/Gezamenlijk)</span>
-        <p id="balR2" class="text-2xl font-bold text-gray-800">€0,00</p>
+      <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-purple-500">
+        <span class="text-xs font-semibold text-gray-400 uppercase">Rekening Veerle</span>
+        <p id="balVeerle" class="text-2xl font-bold text-purple-600">€0,00</p>
       </div>
       <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-red-500">
-        <span class="text-xs font-semibold text-gray-400 uppercase">Totale Uitgaven</span>
+        <span class="text-xs font-semibold text-gray-400 uppercase">Uitgaven (<span id="lblFilterExp">Totaal</span>)</span>
         <p id="totalExpenses" class="text-2xl font-bold text-red-600">€0,00</p>
       </div>
-      <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-blue-500">
-        <span class="text-xs font-semibold text-gray-400 uppercase">Totaal Vermogen</span>
-        <p id="totalNet" class="text-2xl font-bold text-blue-600">€0,00</p>
+      <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-green-500">
+        <span class="text-xs font-semibold text-gray-400 uppercase">Totaal Saldo / Sparen</span>
+        <p id="totalNet" class="text-2xl font-bold text-green-600">€0,00</p>
       </div>
     </div>
 
-    <!-- Formulier & Grafiek Grid -->
+    <!-- Formulier & Vergelijking/Grafiek -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       
-      <!-- Transactie Toevoegen -->
+      <!-- Transactie Invoeren -->
       <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <h2 class="text-lg font-bold mb-4 text-gray-700">Nieuwe Transactie</h2>
         <form id="transactionForm" class="space-y-4">
@@ -54,15 +61,15 @@
             <div>
               <label class="block text-xs font-semibold text-gray-600 mb-1">Rekening</label>
               <select id="account" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="Rekening 1">Rekening 1 (Zicht)</option>
-                <option value="Rekening 2">Rekening 2 (Spaar / Gezamenlijk)</option>
+                <option value="Rekening Tim">Rekening Tim</option>
+                <option value="Rekening Veerle">Rekening Veerle</option>
               </select>
             </div>
           </div>
 
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">Omschrijving</label>
-            <input type="text" id="description" placeholder="bijv. Boodschappen AH, Netflix, Tanken" required class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <input type="text" id="description" placeholder="bijv. Boodschappen, Tanken, Netflix" required class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
           </div>
 
           <div class="grid grid-cols-2 gap-2">
@@ -80,7 +87,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Gedetailleerde Categorie</label>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Categorie</label>
             <select id="category" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
               <optgroup label="🏠 Wonen & Vaste Lasten">
                 <option value="Huur / Hypotheek">Huur / Hypotheek</option>
@@ -96,33 +103,34 @@
               <optgroup label="🚗 Transport & Auto">
                 <option value="Brandstof / Opladen">Brandstof / Opladen</option>
                 <option value="OV / Trein / Bus">OV / Trein / Bus</option>
-                <option value="Auto onderhoud / Belasting">Auto onderhoud / Belasting</option>
+                <option value="Auto onderhoud">Auto onderhoud</option>
               </optgroup>
               <optgroup label="🎉 Vrije Tijd & Ontspanning">
-                <option value="Horeca / Restaurants / Afhaal">Horeca / Restaurants / Afhaal</option>
-                <option value="Abonnementen (Streaming/Sportschool)">Abonnementen (Streaming/Sportschool)</option>
+                <option value="Horeca & Restaurants">Horeca & Restaurants</option>
+                <option value="Abonnementen">Abonnementen</option>
                 <option value="Kleding & Shoppen">Kleding & Shoppen</option>
-                <option value="Cadeaus & Uitjes">Cadeaus & Uitjes</option>
               </optgroup>
-              <optgroup label="💰 Inkomsten & Sparen">
-                <option value="Salaris / Loon">Salaris / Loon</option>
-                <option value="Toeslagen / Teruggave">Toeslagen / Teruggave</option>
-                <option value="Overschrijving tussen rekeningen">Overschrijving tussen rekeningen</option>
+              <optgroup label="🔄 Overig">
+                <option value="Salaris / Inkomsten">Salaris / Inkomsten</option>
+                <option value="Overschrijving Tim <-> Veerle">Overschrijving Tim &lt;-&gt; Veerle</option>
                 <option value="Overig">Overig</option>
               </optgroup>
             </select>
           </div>
 
           <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition text-sm">
-            Transactie Toevoegen
+            Opslaan
           </button>
         </form>
       </div>
 
-      <!-- Grafiek -->
+      <!-- Grafieken & Vergelijking -->
       <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between">
-        <h2 class="text-lg font-bold mb-2 text-gray-700">Waar gaat het geld naartoe?</h2>
-        <div class="relative w-full h-72 flex items-center justify-center">
+        <div>
+          <h2 class="text-lg font-bold text-gray-700 mb-1">Uitgaven per Categorie</h2>
+          <p class="text-xs text-gray-400 mb-4">Gefilterd op: <span id="lblFilterChart" class="font-semibold text-gray-600">Totaal</span></p>
+        </div>
+        <div class="relative w-full h-64 flex items-center justify-center">
           <canvas id="categoryChart"></canvas>
         </div>
       </div>
@@ -132,7 +140,8 @@
     <!-- Tabel met Transacties -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <div class="p-4 border-b border-gray-100 flex justify-between items-center">
-        <h2 class="text-lg font-bold text-gray-700">Alle Transacties</h2>
+        <h2 class="text-lg font-bold text-gray-700">Transactiehistorie</h2>
+        <button onclick="wisAlles()" class="text-xs text-red-500 hover:underline">Alles wissen</button>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-gray-600">
@@ -155,7 +164,8 @@
   </div>
 
   <script>
-    let transactions = JSON.parse(localStorage.getItem('my_finances_data_v2')) || [];
+    let transactions = JSON.parse(localStorage.getItem('financien_tim_veerle')) || [];
+    let activeFilter = 'Totaal';
     let chartInstance = null;
 
     document.getElementById('date').valueAsDate = new Date();
@@ -180,8 +190,30 @@
       document.getElementById('amount').value = '';
     });
 
+    function setFilter(filter) {
+      activeFilter = filter;
+      
+      // Update knop stijlen
+      ['Totaal', 'Rekening Tim', 'Rekening Veerle'].forEach(f => {
+        const btnId = f === 'Totaal' ? 'btnTotaal' : (f === 'Rekening Tim' ? 'btnTim' : 'btnVeerle');
+        const btn = document.getElementById(btnId);
+        if (f === activeFilter) {
+          btn.className = "px-3 py-1.5 text-xs font-semibold rounded-md bg-white shadow-sm text-gray-800";
+        } else {
+          btn.className = "px-3 py-1.5 text-xs font-semibold rounded-md text-gray-600 hover:text-gray-900";
+        }
+      });
+
+      document.getElementById('lblFilterExp').innerText = filter;
+      document.getElementById('lblFilterChart').innerText = filter;
+
+      renderTable();
+      renderStats();
+      renderChart();
+    }
+
     function saveAndRender() {
-      localStorage.setItem('my_finances_data_v2', JSON.stringify(transactions));
+      localStorage.setItem('financien_tim_veerle', JSON.stringify(transactions));
       transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
 
       renderTable();
@@ -193,18 +225,27 @@
       const tbody = document.getElementById('transactionList');
       tbody.innerHTML = '';
 
-      if (transactions.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Nog geen transacties ingevoerd.</td></tr>`;
+      const filtered = activeFilter === 'Totaal' 
+        ? transactions 
+        : transactions.filter(t => t.account === activeFilter);
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Geen transacties gevonden voor ${activeFilter}.</td></tr>`;
         return;
       }
 
-      transactions.forEach(tx => {
+      filtered.forEach(tx => {
         const isExpense = tx.type === 'uitgave';
+        const isTim = tx.account === 'Rekening Tim';
         const row = document.createElement('tr');
         row.className = "hover:bg-gray-50 transition";
         row.innerHTML = `
           <td class="p-3">${tx.date}</td>
-          <td class="p-3"><span class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-semibold">${tx.account}</span></td>
+          <td class="p-3">
+            <span class="px-2 py-1 rounded text-xs font-semibold ${isTim ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}">
+              ${tx.account}
+            </span>
+          </td>
           <td class="p-3 font-medium text-gray-800">${tx.description}</td>
           <td class="p-3"><span class="px-2 py-1 bg-gray-100 rounded-full text-xs">${tx.category}</span></td>
           <td class="p-3 font-bold ${isExpense ? 'text-red-500' : 'text-green-500'}">
@@ -219,27 +260,36 @@
     }
 
     function renderStats() {
-      let r1 = 0, r2 = 0, expenses = 0;
+      let balTim = 0, balVeerle = 0, filteredExpenses = 0;
 
       transactions.forEach(t => {
         const val = t.type === 'inkomst' ? t.amount : -t.amount;
-        if (t.account === 'Rekening 1') r1 += val;
-        if (t.account === 'Rekening 2') r2 += val;
-        if (t.type === 'uitgave' && t.category !== 'Overschrijving tussen rekeningen') {
-          expenses += t.amount;
+        if (t.account === 'Rekening Tim') balTim += val;
+        if (t.account === 'Rekening Veerle') balVeerle += val;
+
+        // Uitgaven berekenen op basis van de actieve filter
+        if (t.type === 'uitgave' && t.category !== 'Overschrijving Tim <-> Veerle') {
+          if (activeFilter === 'Totaal' || t.account === activeFilter) {
+            filteredExpenses += t.amount;
+          }
         }
       });
 
-      document.getElementById('balR1').innerText = `€${r1.toFixed(2)}`;
-      document.getElementById('balR2').innerText = `€${r2.toFixed(2)}`;
-      document.getElementById('totalExpenses').innerText = `€${expenses.toFixed(2)}`;
-      document.getElementById('totalNet').innerText = `€${(r1 + r2).toFixed(2)}`;
+      document.getElementById('balTim').innerText = `€${balTim.toFixed(2)}`;
+      document.getElementById('balVeerle').innerText = `€${balVeerle.toFixed(2)}`;
+      document.getElementById('totalExpenses').innerText = `€${filteredExpenses.toFixed(2)}`;
+      document.getElementById('totalNet').innerText = `€${(balTim + balVeerle).toFixed(2)}`;
     }
 
     function renderChart() {
       const categoryTotals = {};
       
-      transactions.filter(t => t.type === 'uitgave' && t.category !== 'Overschrijving tussen rekeningen').forEach(t => {
+      const filtered = transactions.filter(t => {
+        const isTargetAccount = activeFilter === 'Totaal' || t.account === activeFilter;
+        return isTargetAccount && t.type === 'uitgave' && t.category !== 'Overschrijving Tim <-> Veerle';
+      });
+
+      filtered.forEach(t => {
         categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
       });
 
@@ -255,7 +305,7 @@
           datasets: [{
             data: Object.values(categoryTotals),
             backgroundColor: [
-              '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', 
+              '#3b82f6', '#8b5cf6', '#ef4444', '#f59e0b', '#10b981', 
               '#ec4899', '#6366f1', '#14b8a6', '#f97316', '#84cc16'
             ]
           }]
