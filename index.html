@@ -13,7 +13,7 @@
     <header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl shadow-sm border border-gray-200 gap-4">
       <div>
         <h1 class="text-2xl font-bold text-gray-800">💰 Financiën Tim & Veerle</h1>
-        <p class="text-sm text-gray-500">Maandelijks sparen & uitgaven vergelijken</p>
+        <p class="text-sm text-gray-500">Overzicht, zoekfunctie & vergelijking</p>
       </div>
 
       <!-- Filters: Rekening & Maand -->
@@ -21,7 +21,6 @@
         <!-- Maand Selectie -->
         <select id="monthFilter" onchange="renderAll()" class="bg-gray-100 border border-gray-300 text-gray-800 text-xs rounded-lg p-2 font-semibold outline-none">
           <option value="ALL">🗓️ Alle Maanden</option>
-          <!-- Maanden worden automatisch aangevuld -->
         </select>
 
         <!-- Rekening Filter -->
@@ -53,26 +52,23 @@
       </div>
     </div>
 
-    <!-- NIEUW: Maand-op-Maand Vergelijking -->
+    <!-- NIEUW: Maand Vergelijker Tool -->
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-      <h2 class="text-lg font-bold text-gray-700 mb-1">📊 Spaaroverzicht per Maand</h2>
-      <p class="text-xs text-gray-400 mb-4">Vergelijk je inkomsten, uitgaven en spaarbedrag van maand tot maand</p>
+      <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
+        <div>
+          <h2 class="text-lg font-bold text-gray-700">⚖️ Vergelijk Twee Maanden</h2>
+          <p class="text-xs text-gray-400">Selecteer twee maanden om het spaarresultaat direct te vergelijken</p>
+        </div>
+        <div class="flex gap-2">
+          <select id="compareMonthA" onchange="renderComparison()" class="bg-gray-50 border p-2 text-xs font-semibold rounded-lg outline-none"></select>
+          <span class="self-center font-bold text-gray-400 text-xs">VS</span>
+          <select id="compareMonthB" onchange="renderComparison()" class="bg-gray-50 border p-2 text-xs font-semibold rounded-lg outline-none"></select>
+        </div>
+      </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-gray-600">
-          <thead class="bg-gray-50 text-xs uppercase text-gray-400">
-            <tr>
-              <th class="p-3">Maand</th>
-              <th class="p-3">Inkomsten (+)</th>
-              <th class="p-3">Uitgaven (-)</th>
-              <th class="p-3">Netto Gespaard</th>
-              <th class="p-3 text-right">Resultaat</th>
-            </tr>
-          </thead>
-          <tbody id="monthlyOverview" class="divide-y divide-gray-100">
-            <!-- Dynamisch gevuld -->
-          </tbody>
-        </table>
+      <!-- Resultaat Vergelijking Kaarten -->
+      <div id="comparisonContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Dynamisch gevuld -->
       </div>
     </div>
 
@@ -172,12 +168,18 @@
 
     </div>
 
-    <!-- Tabel met Transacties -->
+    <!-- Tabel met Transacties & NIEUWE Zoekbalk -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+      <div class="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <h2 class="text-lg font-bold text-gray-700">Transactiehistorie</h2>
-        <button onclick="wisAlles()" class="text-xs text-red-500 hover:underline">Alles wissen</button>
+        
+        <div class="flex items-center gap-3 w-full md:w-auto">
+          <!-- Zoekbalk -->
+          <input type="text" id="searchInput" oninput="renderTable()" placeholder="🔍 Zoek omschrijving of categorie..." class="w-full md:w-64 p-2 border rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+          <button onclick="wisAlles()" class="text-xs text-red-500 hover:underline whitespace-nowrap">Alles wissen</button>
+        </div>
       </div>
+
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-gray-600">
           <thead class="bg-gray-50 text-xs uppercase text-gray-400">
@@ -245,39 +247,52 @@
       localStorage.setItem('financien_tim_veerle', JSON.stringify(transactions));
       transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-      updateMonthDropdown();
+      updateDropdowns();
       renderAll();
     }
 
-    function updateMonthDropdown() {
-      const dropdown = document.getElementById('monthFilter');
-      const selectedValue = dropdown.value;
-      dropdown.innerHTML = '<option value="ALL">🗓️ Alle Maanden</option>';
+    function updateDropdowns() {
+      const monthFilter = document.getElementById('monthFilter');
+      const compA = document.getElementById('compareMonthA');
+      const compB = document.getElementById('compareMonthB');
+
+      const selectedMain = monthFilter.value;
+      const selectedA = compA.value;
+      const selectedB = compB.value;
+
+      monthFilter.innerHTML = '<option value="ALL">🗓️ Alle Maanden</option>';
+      compA.innerHTML = '';
+      compB.innerHTML = '';
 
       const months = new Set();
       transactions.forEach(t => {
-        if (t.date) {
-          months.add(t.date.substring(0, 7)); // YYYY-MM
-        }
+        if (t.date) months.add(t.date.substring(0, 7));
       });
 
-      Array.from(months).sort().reverse().forEach(m => {
-        const option = document.createElement('option');
-        option.value = m;
-        option.innerText = `📅 ${m}`;
-        dropdown.appendChild(option);
+      const sortedMonths = Array.from(months).sort().reverse();
+
+      sortedMonths.forEach(m => {
+        monthFilter.innerHTML += `<option value="${m}">📅 ${m}</option>`;
+        compA.innerHTML += `<option value="${m}">${m}</option>`;
+        compB.innerHTML += `<option value="${m}">${m}</option>`;
       });
 
-      dropdown.value = selectedValue || 'ALL';
+      monthFilter.value = selectedMain || 'ALL';
+      if (sortedMonths.length > 0) {
+        compA.value = selectedA || sortedMonths[0];
+        compB.value = selectedB || (sortedMonths[1] || sortedMonths[0]);
+      }
     }
 
     function getFilteredTransactions() {
       const selectedMonth = document.getElementById('monthFilter').value;
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
 
       return transactions.filter(t => {
         const matchAccount = activeAccountFilter === 'Totaal' || t.account === activeAccountFilter;
         const matchMonth = selectedMonth === 'ALL' || (t.date && t.date.startsWith(selectedMonth));
-        return matchAccount && matchMonth;
+        const matchSearch = t.description.toLowerCase().includes(searchTerm) || t.category.toLowerCase().includes(searchTerm);
+        return matchAccount && matchMonth && matchSearch;
       });
     }
 
@@ -285,7 +300,7 @@
       renderTable();
       renderStats();
       renderRanking();
-      renderMonthlyOverview();
+      renderComparison();
     }
 
     function renderTable() {
@@ -295,7 +310,7 @@
       const filtered = getFilteredTransactions();
 
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Geen transacties gevonden voor deze selectie.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Geen transacties gevonden.</td></tr>`;
         return;
       }
 
@@ -392,56 +407,61 @@
       });
     }
 
-    function renderMonthlyOverview() {
-      const tbody = document.getElementById('monthlyOverview');
-      tbody.innerHTML = '';
-
-      const monthlyData = {};
-
+    function getMonthStats(monthKey) {
+      let inc = 0, exp = 0;
       transactions.forEach(t => {
-        if (!t.date || t.category === 'Overschrijving Tim <-> Veerle') return;
-        const monthKey = t.date.substring(0, 7); // YYYY-MM
-
-        if (!monthlyData[monthKey]) {
-          monthlyData[monthKey] = { income: 0, expense: 0 };
-        }
-
-        if (activeAccountFilter === 'Totaal' || t.account === activeAccountFilter) {
-          if (t.type === 'inkomst') monthlyData[monthKey].income += t.amount;
-          if (t.type === 'uitgave') monthlyData[monthKey].expense += t.amount;
+        if (t.date && t.date.startsWith(monthKey) && t.category !== 'Overschrijving Tim <-> Veerle') {
+          if (activeAccountFilter === 'Totaal' || t.account === activeAccountFilter) {
+            if (t.type === 'inkomst') inc += t.amount;
+            if (t.type === 'uitgave') exp += t.amount;
+          }
         }
       });
+      return { inc, exp, saved: inc - exp };
+    }
 
-      const sortedMonths = Object.keys(monthlyData).sort().reverse();
+    function renderComparison() {
+      const container = document.getElementById('comparisonContainer');
+      const mA = document.getElementById('compareMonthA').value;
+      const mB = document.getElementById('compareMonthB').value;
 
-      if (sortedMonths.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Nog geen maandgegevens beschikbaar.</td></tr>`;
+      if (!mA || !mB) {
+        container.innerHTML = `<p class="text-xs text-gray-400 col-span-2 text-center py-4">Voeg transacties over meerdere maanden toe om te vergelijken.</p>`;
         return;
       }
 
-      sortedMonths.forEach(m => {
-        const inc = monthlyData[m].income;
-        const exp = monthlyData[m].expense;
-        const saved = inc - exp;
-        const isPositive = saved >= 0;
+      const statsA = getMonthStats(mA);
+      const statsB = getMonthStats(mB);
 
-        const row = document.createElement('tr');
-        row.className = "hover:bg-gray-50 transition";
-        row.innerHTML = `
-          <td class="p-3 font-semibold text-gray-800">${m}</td>
-          <td class="p-3 text-green-600 font-medium">+€${inc.toFixed(2)}</td>
-          <td class="p-3 text-red-600 font-medium">-€${exp.toFixed(2)}</td>
-          <td class="p-3 font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}">
-            €${saved.toFixed(2)}
-          </td>
-          <td class="p-3 text-right">
-            <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${isPositive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
-              ${isPositive ? '🟢 Gespaard' : '🔴 Tekort'}
+      container.innerHTML = `
+        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-gray-800">${mA}</span>
+            <span class="text-xs px-2 py-0.5 rounded ${statsA.saved >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-semibold">
+              ${statsA.saved >= 0 ? 'Gespaard' : 'Tekort'}
             </span>
-          </td>
-        `;
-        tbody.appendChild(row);
-      });
+          </div>
+          <div class="text-xs text-gray-500 space-y-1">
+            <div class="flex justify-between"><span>Inkomsten:</span><span class="text-green-600 font-medium">+€${statsA.inc.toFixed(2)}</span></div>
+            <div class="flex justify-between"><span>Uitgaven:</span><span class="text-red-600 font-medium">-€${statsA.exp.toFixed(2)}</span></div>
+            <div class="flex justify-between font-bold pt-1 border-t text-gray-800"><span>Netto:</span><span>€${statsA.saved.toFixed(2)}</span></div>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-gray-800">${mB}</span>
+            <span class="text-xs px-2 py-0.5 rounded ${statsB.saved >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-semibold">
+              ${statsB.saved >= 0 ? 'Gespaard' : 'Tekort'}
+            </span>
+          </div>
+          <div class="text-xs text-gray-500 space-y-1">
+            <div class="flex justify-between"><span>Inkomsten:</span><span class="text-green-600 font-medium">+€${statsB.inc.toFixed(2)}</span></div>
+            <div class="flex justify-between"><span>Uitgaven:</span><span class="text-red-600 font-medium">-€${statsB.exp.toFixed(2)}</span></div>
+            <div class="flex justify-between font-bold pt-1 border-t text-gray-800"><span>Netto:</span><span>€${statsB.saved.toFixed(2)}</span></div>
+          </div>
+        </div>
+      `;
     }
 
     function verwijderTransactie(id) {
@@ -456,7 +476,7 @@
       }
     }
 
-    updateMonthDropdown();
+    updateDropdowns();
     renderAll();
   </script>
 </body>
