@@ -78,7 +78,7 @@
       <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-lg font-bold text-gray-700">Nieuwe Transactie</h2>
-          <button onclick="kopieerVasteLasten()" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 py-1.5 rounded-lg border transition">
+          <button onclick="openVasteLastenModal()" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-lg border border-blue-200 transition">
             🔄 Vaste lasten kopiëren
           </button>
         </div>
@@ -215,6 +215,36 @@
 
   </div>
 
+  <!-- POP-UP DIALOOGVENSTER VOOR VASTE LASTEN SELECTIE -->
+  <div id="vasteLastenModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden p-4 z-50">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-gray-800 text-base">Selecteer Vaste Lasten</h3>
+        <button onclick="closeVasteLastenModal()" class="text-gray-400 hover:text-gray-600 font-bold">&times;</button>
+      </div>
+      
+      <p class="text-xs text-gray-500">Vink hieronder de posten aan die je wilt kopiëren naar de nieuwe maand:</p>
+
+      <div id="vasteLastenList" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+        <!-- Dynamisch gevuld met checkboxen -->
+      </div>
+
+      <div class="flex justify-between items-center pt-2 border-t">
+        <button onclick="toggleSelectAllModal(true)" class="text-xs text-blue-600 hover:underline font-medium">Alles selecteren</button>
+        <button onclick="toggleSelectAllModal(false)" class="text-xs text-gray-500 hover:underline">Alles deselecteren</button>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="closeVasteLastenModal()" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-xs font-semibold transition">
+          Annuleren
+        </button>
+        <button onclick="bevestigKopiërenVasteLasten()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-semibold transition">
+          Kopiëren
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let transactions = JSON.parse(localStorage.getItem('financien_tim_veerle')) || [];
     let activeAccountFilter = 'Totaal';
@@ -222,12 +252,14 @@
     let currentPage = 1;
     const itemsPerPage = 10;
 
-    // Vaste lasten categorieën die we willen kopieëren (Salaris is hier nu uitgehaald)
+    // Categorieën die als vaste lasten kunnen gelden
     const fixedCategories = [
       'Afbetaling Auto', 'Persoonlijke Lening', 'Krediet / Visakaart',
       'Huur / Hypotheek', 'Gas / Water / Licht', 'Verzekeringen', 
-      'Internet & Telefonie', 'Abonnementen'
+      'Internet & Telefonie', 'Abonnementen', 'Salaris / Inkomsten'
     ];
+
+    let pendingFixedTxs = []; // Tijdelijke opslag voor modal
 
     document.getElementById('date').valueAsDate = new Date();
 
@@ -251,28 +283,64 @@
       document.getElementById('amount').value = '';
     });
 
-    function kopieerVasteLasten() {
+    function openVasteLastenModal() {
       if (transactions.length === 0) {
         alert("Er zijn nog geen eerdere transacties om te kopiëren.");
         return;
       }
 
-      // Zoek de meest recente unieke maand
       const months = Array.from(new Set(transactions.map(t => t.date.substring(0, 7)))).sort().reverse();
       const lastMonth = months[0];
 
-      // Filter alle vaste lasten uit die maand
-      const fixedTxs = transactions.filter(t => t.date.startsWith(lastMonth) && fixedCategories.includes(t.category));
+      pendingFixedTxs = transactions.filter(t => t.date.startsWith(lastMonth) && fixedCategories.includes(t.category));
 
-      if (fixedTxs.length === 0) {
+      if (pendingFixedTxs.length === 0) {
         alert(`Geen vaste lasten gevonden in de periode ${lastMonth}.`);
         return;
       }
 
-      const todayStr = new Date().toISOString().substring(0, 10);
+      const container = document.getElementById('vasteLastenList');
+      container.innerHTML = '';
 
-      if (confirm(`Wil je ${fixedTxs.length} vaste lasten van ${lastMonth} kopiëren naar vandaag (${todayStr})?`)) {
-        fixedTxs.forEach(t => {
+      pendingFixedTxs.forEach((t, idx) => {
+        const isIncome = t.type === 'inkomst';
+        container.innerHTML += `
+          <label class="flex items-center justify-between p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="modal_cb_${idx}" checked class="rounded text-blue-600 focus:ring-blue-500">
+              <div class="text-xs">
+                <span class="font-semibold text-gray-800 block">${t.description}</span>
+                <span class="text-gray-400 text-[10px]">${t.category} (${t.account})</span>
+              </div>
+            </div>
+            <span class="text-xs font-bold ${isIncome ? 'text-green-600' : 'text-red-500'}">
+              ${isIncome ? '+' : '-'}€${t.amount.toFixed(2)}
+            </span>
+          </label>
+        `;
+      });
+
+      document.getElementById('vasteLastenModal').classList.remove('hidden');
+    }
+
+    function closeVasteLastenModal() {
+      document.getElementById('vasteLastenModal').classList.add('hidden');
+    }
+
+    function toggleSelectAllModal(select) {
+      pendingFixedTxs.forEach((_, idx) => {
+        const cb = document.getElementById(`modal_cb_${idx}`);
+        if (cb) cb.checked = select;
+      });
+    }
+
+    function bevestigKopiërenVasteLasten() {
+      const todayStr = new Date().toISOString().substring(0, 10);
+      let count = 0;
+
+      pendingFixedTxs.forEach((t, idx) => {
+        const cb = document.getElementById(`modal_cb_${idx}`);
+        if (cb && cb.checked) {
           transactions.push({
             id: Date.now() + Math.random(),
             date: todayStr,
@@ -282,9 +350,15 @@
             type: t.type,
             category: t.category
           });
-        });
-        saveAndRender();
-        alert("Vaste lasten succesvol gekopieerd! Je kunt nu je salaris voor deze maand handmatig invoeren.");
+          count++;
+        }
+      });
+
+      closeVasteLastenModal();
+      saveAndRender();
+
+      if (count > 0) {
+        alert(`${count} vaste last(en) succesvol gekopieerd naar vandaag!`);
       }
     }
 
