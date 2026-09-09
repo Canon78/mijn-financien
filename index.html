@@ -3,131 +3,209 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Financieel Dashboard</title>
-  <!-- Tailwind CSS voor styling -->
+  <title>Mijn Financiën - Handmatig</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js voor grafieken -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- PapaParse voor CSV verwerking -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
-<body class="bg-gray-100 p-6 min-h-screen">
-  <div class="max-w-6xl mx-auto">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">💰 Financieel Dashboard</h1>
+<body class="bg-gray-100 p-4 md:p-8 min-h-screen">
+  <div class="max-w-5xl mx-auto space-y-6">
     
-    <!-- Upload sectie -->
-    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-      <label class="block text-sm font-medium text-gray-700 mb-2">Upload je bank CSV-bestand:</label>
-      <input type="file" id="csvFile" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
-    </div>
+    <header class="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800">💰 Persoonlijk Financieel Overzicht</h1>
+        <p class="text-sm text-gray-500">Vul je inkomsten en uitgaven handmatig in</p>
+      </div>
+      <button onclick="wisAlles()" class="text-xs text-red-500 hover:underline">Alles wis/resetten</button>
+    </header>
 
-    <!-- Stat kaarten -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-500">
-        <h2 class="text-sm font-medium text-gray-500">Inkomsten</h2>
+    <!-- Stat Kaarten -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-green-500">
+        <span class="text-xs font-semibold text-gray-400 uppercase">Inkomsten</span>
         <p id="totalIncome" class="text-2xl font-bold text-green-600">€0,00</p>
       </div>
-      <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500">
-        <h2 class="text-sm font-medium text-gray-500">Uitgaven</h2>
+      <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-red-500">
+        <span class="text-xs font-semibold text-gray-400 uppercase">Uitgaven</span>
         <p id="totalExpenses" class="text-2xl font-bold text-red-600">€0,00</p>
       </div>
-      <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
-        <h2 class="text-sm font-medium text-gray-500">Netto Resultaat</h2>
+      <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-blue-500">
+        <span class="text-xs font-semibold text-gray-400 uppercase">Netto Gespaard</span>
         <p id="netBalance" class="text-2xl font-bold text-blue-600">€0,00</p>
       </div>
     </div>
 
-    <!-- Grafiek -->
-    <div class="bg-white p-6 rounded-lg shadow-md">
-      <h2 class="text-xl font-bold mb-4 text-gray-700">Uitgaven per Categorie</h2>
-      <div class="w-full max-w-md mx-auto">
-        <canvas id="categoryChart"></canvas>
+    <!-- Formulier & Grafiek Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      
+      <!-- Transactie Toevoegen -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <h2 class="text-lg font-bold mb-4 text-gray-700">Nieuwe Transactie</h2>
+        <form id="transactionForm" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Datum</label>
+            <input type="date" id="date" required class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Omschrijving</label>
+            <input type="text" id="description" placeholder="bijv. Boodschappen, Salaris" required class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Bedrag (€)</label>
+              <input type="number" step="0.01" min="0.01" id="amount" placeholder="0.00" required class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Type</label>
+              <select id="type" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="uitgave">Uitgave (-)</option>
+                <option value="inkomst">Inkomst (+)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Categorie</label>
+            <select id="category" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="Boodschappen">Boodschappen</option>
+              <option value="Vaste Lasten">Vaste Lasten (Huur, Energie)</option>
+              <option value="Abonnementen">Abonnementen</option>
+              <option value="Transport">Transport / Brandstof</option>
+              <option value="Horeca & Vrije tijd">Horeca & Vrije tijd</option>
+              <option value="Salaris / Inkomsten">Salaris / Inkomsten</option>
+              <option value="Overig">Overig</option>
+            </select>
+          </div>
+          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition text-sm">
+            Toevoegen
+          </button>
+        </form>
+      </div>
+
+      <!-- Grafiek -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between">
+        <h2 class="text-lg font-bold mb-2 text-gray-700">Uitgaven per Categorie</h2>
+        <div class="relative w-full h-64 flex items-center justify-center">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Tabel met Transacties -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+        <h2 class="text-lg font-bold text-gray-700">Ingevoerde Transacties</h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-gray-600">
+          <thead class="bg-gray-50 text-xs uppercase text-gray-400">
+            <tr>
+              <th class="p-3">Datum</th>
+              <th class="p-3">Omschrijving</th>
+              <th class="p-3">Categorie</th>
+              <th class="p-3">Bedrag</th>
+              <th class="p-3 text-right">Actie</th>
+            </tr>
+          </thead>
+          <tbody id="transactionList" class="divide-y divide-gray-100">
+            <!-- Transacties komen hier -->
+          </tbody>
+        </table>
       </div>
     </div>
+
   </div>
 
   <script>
-    const CATEGORIES = {
-      'Boodschappen': ['albert heijn', 'jumbo', 'lidl', 'aldi', 'carrefour', 'colruyt', 'delhaize'],
-      'Vaste Lasten': ['huur', 'hypotheek', 'energie', 'water', 'engie', 'fluvius', 'vandebron'],
-      'Abonnementen': ['spotify', 'netflix', 'disney', 'icloud', 'kpn', 'ziggo', 'proximus', 'telenet'],
-      'Transport': ['ns', 'nmbs', 'shell', 'bp', 'eene', 'tank', 'de lijn'],
-      'Horeca & Vrije tijd': ['restaurant', 'café', 'cafe', 'thuisbezorgd', 'ubereats', 'bioscoop']
-    };
-
+    // Haal opgeslagen data op uit localStorage of start met een lege lijst
+    let transactions = JSON.parse(localStorage.getItem('my_finances_data')) || [];
     let chartInstance = null;
 
-    document.getElementById('csvFile').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
+    // Stel vandaag in als standaarddatum in het formulier
+    document.getElementById('date').valueAsDate = new Date();
 
-      Papa.parse(file, {
-        header: true,
-        dynamicTyping: true,
-        skipEmptyLines: true,
-        complete: function(results) {
-          processData(results.data);
-        }
-      });
+    // Formulier versturen
+    document.getElementById('transactionForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const newTx = {
+        id: Date.now(),
+        date: document.getElementById('date').value,
+        description: document.getElementById('description').value,
+        amount: parseFloat(document.getElementById('amount').value),
+        type: document.getElementById('type').value,
+        category: document.getElementById('category').value
+      };
+
+      transactions.push(newTx);
+      saveAndRender();
+
+      // Formulier leegmaken (behalve datum)
+      document.getElementById('description').value = '';
+      document.getElementById('amount').value = '';
     });
 
-    function categorize(description) {
-      if (!description) return 'Overig';
-      const descLower = description.toString().toLowerCase();
-      for (const [cat, keywords] of Object.entries(CATEGORIES)) {
-        if (keywords.some(kw => descLower.includes(kw))) {
-          return cat;
-        }
-      }
-      return 'Overig';
+    function saveAndRender() {
+      // Opslaan in de browser
+      localStorage.setItem('my_finances_data', JSON.stringify(transactions));
+
+      // Sorteer op datum (nieuwste eerst)
+      transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      renderTable();
+      renderStats();
+      renderChart();
     }
 
-    function processData(rows) {
-      let income = 0;
-      let expenses = 0;
-      const categoryTotals = {};
+    function renderTable() {
+      const tbody = document.getElementById('transactionList');
+      tbody.innerHTML = '';
 
-      rows.forEach(row => {
-        // Zoek naar kolommen voor bedrag en omschrijving
-        const keys = Object.keys(row);
-        const amountKey = keys.find(k => k.toLowerCase().includes('bedrag') || k.toLowerCase().includes('amount'));
-        const descKey = keys.find(k => k.toLowerCase().includes('naam') || k.toLowerCase().includes('omschrijving') || k.toLowerCase().includes('memo'));
+      if (transactions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Nog geen transacties ingevoerd.</td></tr>`;
+        return;
+      }
 
-        if (!amountKey) return;
-
-        let rawAmount = row[amountKey];
-        if (typeof rawAmount === 'string') {
-          rawAmount = parseFloat(rawAmount.replace(',', '.'));
-        }
-
-        if (isNaN(rawAmount)) return;
-
-        const description = descKey ? row[descKey] : '';
-
-        if (rawAmount > 0) {
-          income += rawAmount;
-        } else {
-          const absAmount = Math.abs(rawAmount);
-          expenses += absAmount;
-          const cat = categorize(description);
-          categoryTotals[cat] = (categoryTotals[cat] || 0) + absAmount;
-        }
+      transactions.forEach(tx => {
+        const isExpense = tx.type === 'uitgave';
+        const row = document.createElement('tr');
+        row.className = "hover:bg-gray-50 transition";
+        row.innerHTML = `
+          <td class="p-3">${tx.date}</td>
+          <td class="p-3 font-medium text-gray-800">${tx.description}</td>
+          <td class="p-3"><span class="px-2 py-1 bg-gray-100 rounded-full text-xs">${tx.category}</span></td>
+          <td class="p-3 font-bold ${isExpense ? 'text-red-500' : 'text-green-500'}">
+            ${isExpense ? '-' : '+'}€${tx.amount.toFixed(2)}
+          </td>
+          <td class="p-3 text-right">
+            <button onclick="verwijderTransactie(${tx.id})" class="text-xs text-red-400 hover:text-red-600">Verwijder</button>
+          </td>
+        `;
+        tbody.appendChild(row);
       });
+    }
 
-      // Update Kaarten
+    function renderStats() {
+      const income = transactions.filter(t => t.type === 'inkomst').reduce((acc, t) => acc + t.amount, 0);
+      const expenses = transactions.filter(t => t.type === 'uitgave').reduce((acc, t) => acc + t.amount, 0);
+      const net = income - expenses;
+
       document.getElementById('totalIncome').innerText = `€${income.toFixed(2)}`;
       document.getElementById('totalExpenses').innerText = `€${expenses.toFixed(2)}`;
-      document.getElementById('netBalance').innerText = `€${(income - expenses).toFixed(2)}`;
-
-      // Update Grafiek
-      renderChart(categoryTotals);
+      document.getElementById('netBalance').innerText = `€${net.toFixed(2)}`;
     }
 
-    function renderChart(categoryTotals) {
-      const ctx = document.getElementById('categoryChart').getContext('2d');
+    function renderChart() {
+      const categoryTotals = {};
       
-      if (chartInstance) {
-        chartInstance.destroy();
+      transactions.filter(t => t.type === 'uitgave').forEach(t => {
+        categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
+      });
+
+      const ctx = document.getElementById('categoryChart').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      if (Object.keys(categoryTotals).length === 0) {
+        return;
       }
 
       chartInstance = new Chart(ctx, {
@@ -136,11 +214,30 @@
           labels: Object.keys(categoryTotals),
           datasets: [{
             data: Object.values(categoryTotals),
-            backgroundColor: ['#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6', '#10b981', '#6b7280']
+            backgroundColor: ['#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6', '#10b981', '#ec4899', '#6b7280']
           }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
         }
       });
     }
+
+    function verwijderTransactie(id) {
+      transactions = transactions.filter(t => t.id !== id);
+      saveAndRender();
+    }
+
+    function wisAlles() {
+      if (confirm("Weet je zeker dat je alle ingevoerde gegevens wilt wissen?")) {
+        transactions = [];
+        saveAndRender();
+      }
+    }
+
+    // Eerste keers laden
+    saveAndRender();
   </script>
 </body>
 </html>
