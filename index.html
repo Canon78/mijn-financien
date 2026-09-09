@@ -13,7 +13,7 @@
     <header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-xl shadow-sm border border-gray-200 gap-4">
       <div>
         <h1 class="text-2xl font-bold text-gray-800">💰 Financiën Tim & Veerle</h1>
-        <p class="text-sm text-gray-500">Overzicht, vergelijking & automatische vaste lasten</p>
+        <p class="text-sm text-gray-500">Overzicht, vergelijking & slimme vaste lasten</p>
       </div>
 
       <!-- Filters: Rekening & Maand -->
@@ -222,11 +222,11 @@
     let currentPage = 1;
     const itemsPerPage = 10;
 
-    // Vaste lasten categorieën die we willen kopieëren
+    // Vaste lasten categorieën die we willen kopieëren (Salaris is hier nu uitgehaald)
     const fixedCategories = [
       'Afbetaling Auto', 'Persoonlijke Lening', 'Krediet / Visakaart',
       'Huur / Hypotheek', 'Gas / Water / Licht', 'Verzekeringen', 
-      'Internet & Telefonie', 'Abonnementen', 'Salaris / Inkomsten'
+      'Internet & Telefonie', 'Abonnementen'
     ];
 
     document.getElementById('date').valueAsDate = new Date();
@@ -251,7 +251,6 @@
       document.getElementById('amount').value = '';
     });
 
-    // NIEUW: Functie om vaste lasten van de recentste maand over te nemen naar de huidige datum
     function kopieerVasteLasten() {
       if (transactions.length === 0) {
         alert("Er zijn nog geen eerdere transacties om te kopiëren.");
@@ -285,7 +284,7 @@
           });
         });
         saveAndRender();
-        alert("Vaste lasten succesvol gekopieerd!");
+        alert("Vaste lasten succesvol gekopieerd! Je kunt nu je salaris voor deze maand handmatig invoeren.");
       }
     }
 
