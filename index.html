@@ -55,7 +55,7 @@
       <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
         <div>
           <h2 class="text-lg font-bold text-gray-700">⚖️ Vergelijk Twee Maanden</h2>
-          <p class="text-xs text-gray-400">Selecteer twee maanden om te zien hoeveel je overhield en hoe je bankstand veranderde</p>
+          <p class="text-xs text-gray-400">Selecteer twee maanden om te zien hoeveel er binnenkwam, uitging en overbleef</p>
         </div>
         <div class="flex gap-2">
           <select id="compareMonthA" onchange="renderComparison()" class="bg-gray-50 border p-2 text-xs font-semibold rounded-lg outline-none"></select>
@@ -121,7 +121,6 @@
                 ⚙️ Categorieën beheren
               </button>
             </div>
-            <!-- Slim Invoerveld met Zoekfunctie -->
             <input type="text" id="category" list="categoryOptions" placeholder="🔍 Typ of kies categorie..." required class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" autocomplete="off">
             <datalist id="categoryOptions">
             </datalist>
@@ -157,13 +156,11 @@
 
         <!-- Zoekbalk & Extra Filters -->
         <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
-          <!-- 1. Zoek op woord -->
           <div>
             <label class="block text-gray-500 font-semibold mb-1">Zoekterm</label>
             <input type="text" id="searchInput" oninput="currentPage=1; renderTable();" placeholder="🔍 Omschrijving..." class="w-full p-2 border rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500">
           </div>
 
-          <!-- 2. Filter op Categorie -->
           <div>
             <label class="block text-gray-500 font-semibold mb-1">Categorie</label>
             <select id="filterCategory" onchange="currentPage=1; renderTable();" class="w-full p-2 border rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500">
@@ -171,7 +168,6 @@
             </select>
           </div>
 
-          <!-- 3. Filter op Type -->
           <div>
             <label class="block text-gray-500 font-semibold mb-1">Type Transactie</label>
             <select id="filterType" onchange="currentPage=1; renderTable();" class="w-full p-2 border rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500">
@@ -181,13 +177,11 @@
             </select>
           </div>
 
-          <!-- 4. Min Bedrag -->
           <div>
             <label class="block text-gray-500 font-semibold mb-1">Min. Bedrag (€)</label>
             <input type="number" id="filterMinAmount" oninput="currentPage=1; renderTable();" placeholder="0.00" class="w-full p-2 border rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500">
           </div>
 
-          <!-- 5. Max Bedrag & Wisknop -->
           <div>
             <div class="flex justify-between mb-1">
               <label class="block text-gray-500 font-semibold">Max. Bedrag (€)</label>
@@ -234,7 +228,7 @@
         <h3 class="font-bold text-gray-800 text-base">⚙️ Beginsaldi Instellen</h3>
         <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-gray-600 font-bold">&times;</button>
       </div>
-      <p class="text-xs text-gray-500">Stel hier het startsaldo in op het moment dat je bent begonnen met invoeren (gebruik minteken voor roodstand, bijv. -512.21):</p>
+      <p class="text-xs text-gray-500">Stel hier het startsaldo in op het moment dat je bent begonnen met invoeren:</p>
       <div class="space-y-3">
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1">Beginsaldo Tim (€)</label>
@@ -407,7 +401,6 @@
       const editId = document.getElementById('editId').value;
       const catVal = document.getElementById('category').value.trim() || 'Overig';
       
-      // Als de ingevulde categorie nieuw is, direct opslaan in de lijst
       if (!categories.includes(catVal)) {
         categories.push(catVal);
         localStorage.setItem('financien_categories', JSON.stringify(categories));
@@ -792,28 +785,7 @@
         }
       });
 
-      let startBalance = 0;
-      if (activeAccountFilter === 'Totaal') {
-        startBalance = (initialBalances.Tim || 0) + (initialBalances.Veerle || 0);
-      } else if (activeAccountFilter === 'Rekening Tim') {
-        startBalance = initialBalances.Tim || 0;
-      } else if (activeAccountFilter === 'Rekening Veerle') {
-        startBalance = initialBalances.Veerle || 0;
-      }
-
-      let prevTransactionsSum = 0;
-      transactions.forEach(t => {
-        if (t.date && t.date.substring(0, 7) < monthKey) {
-          if (activeAccountFilter === 'Totaal' || t.account === activeAccountFilter) {
-            const val = t.type === 'inkomst' ? Number(t.amount) : -Number(t.amount);
-            prevTransactionsSum += val;
-          }
-        }
-      });
-
-      const bankEndBalance = startBalance + prevTransactionsSum + inc - exp;
-
-      return { inc, exp, saved: bankEndBalance };
+      return { inc, exp };
     }
 
     function renderComparison() {
@@ -843,13 +815,9 @@
           <div class="text-xs text-gray-500 space-y-1">
             <div class="flex justify-between"><span>Inkomsten:</span><span class="text-green-600 font-medium">+€${statsA.inc.toFixed(2)}</span></div>
             <div class="flex justify-between"><span>Uitgaven:</span><span class="text-red-600 font-medium">-€${statsA.exp.toFixed(2)}</span></div>
-            <div class="flex justify-between font-bold pt-1 border-t text-gray-800">
+            <div class="flex justify-between font-bold pt-2 border-t text-gray-800 text-sm">
               <span>Overgebleven deze maand:</span>
               <span class="${netA >= 0 ? 'text-green-600' : 'text-red-600'}">€${netA.toFixed(2)}</span>
-            </div>
-            <div class="flex justify-between text-gray-400 text-[11px] pt-1">
-              <span>Eindsaldo Bank:</span>
-              <span>€${statsA.saved.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -864,13 +832,9 @@
           <div class="text-xs text-gray-500 space-y-1">
             <div class="flex justify-between"><span>Inkomsten:</span><span class="text-green-600 font-medium">+€${statsB.inc.toFixed(2)}</span></div>
             <div class="flex justify-between"><span>Uitgaven:</span><span class="text-red-600 font-medium">-€${statsB.exp.toFixed(2)}</span></div>
-            <div class="flex justify-between font-bold pt-1 border-t text-gray-800">
+            <div class="flex justify-between font-bold pt-2 border-t text-gray-800 text-sm">
               <span>Overgebleven deze maand:</span>
               <span class="${netB >= 0 ? 'text-green-600' : 'text-red-600'}">€${netB.toFixed(2)}</span>
-            </div>
-            <div class="flex justify-between text-gray-400 text-[11px] pt-1">
-              <span>Eindsaldo Bank:</span>
-              <span>€${statsB.saved.toFixed(2)}</span>
             </div>
           </div>
         </div>
