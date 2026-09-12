@@ -16,8 +16,13 @@
         <p class="text-sm text-gray-500">Overzicht, vergelijking & slimme vaste lasten</p>
       </div>
 
-      <!-- Filters: Rekening & Maand -->
+      <!-- Filters & Instellingen -->
       <div class="flex flex-wrap items-center gap-3">
+        <!-- Beginsaldi Knop -->
+        <button onclick="openSettingsModal()" class="bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 text-xs rounded-lg px-3 py-2 font-semibold outline-none flex items-center gap-1 transition">
+          ⚙️ Beginsaldi
+        </button>
+
         <!-- Maand Selectie -->
         <select id="monthFilter" onchange="renderAll()" class="bg-gray-100 border border-gray-300 text-gray-800 text-xs rounded-lg p-2 font-semibold outline-none">
           <option value="ALL">🗓️ Alle Maanden</option>
@@ -35,11 +40,11 @@
     <!-- Stat Kaarten -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-blue-500">
-        <span class="text-xs font-semibold text-gray-400 uppercase">Saldo Tim</span>
+        <span class="text-xs font-semibold text-gray-400 uppercase">Saldo Tim (incl. start)</span>
         <p id="balTim" class="text-2xl font-bold text-blue-600">€0,00</p>
       </div>
       <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-purple-500">
-        <span class="text-xs font-semibold text-gray-400 uppercase">Saldo Veerle</span>
+        <span class="text-xs font-semibold text-gray-400 uppercase">Saldo Veerle (incl. start)</span>
         <p id="balVeerle" class="text-2xl font-bold text-purple-600">€0,00</p>
       </div>
       <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-red-500">
@@ -197,6 +202,38 @@
 
   </div>
 
+  <!-- POP-UP DIALOOGVENSTER VOOR BEGINSALDI INSTELLEN -->
+  <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden p-4 z-50">
+    <div class="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-gray-800 text-base">⚙️ Beginsaldi Instellen</h3>
+        <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-gray-600 font-bold">&times;</button>
+      </div>
+      
+      <p class="text-xs text-gray-500">Stel hier het startsaldo in vóór je eerste ingevoerde transacties (gebruik een minteken voor min-saldo, bijv. -200.00):</p>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Beginsaldo Tim (€)</label>
+          <input type="number" step="0.01" id="initBalTim" placeholder="0.00" class="w-full p-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Beginsaldo Veerle (€)</label>
+          <input type="number" step="0.01" id="initBalVeerle" placeholder="0.00" class="w-full p-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2 border-t">
+        <button onclick="closeSettingsModal()" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-xs font-semibold transition">
+          Annuleren
+        </button>
+        <button onclick="saveInitialBalances()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-semibold transition">
+          Opslaan
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- POP-UP DIALOOGVENSTER VOOR VASTE LASTEN SELECTIE -->
   <div id="vasteLastenModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden p-4 z-50">
     <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
@@ -260,6 +297,7 @@
 
   <script>
     let transactions = JSON.parse(localStorage.getItem('financien_tim_veerle')) || [];
+    let initialBalances = JSON.parse(localStorage.getItem('financien_initial_balances')) || { Tim: 0, Veerle: 0 };
     
     // Standaard categorieën
     const defaultCategories = [
@@ -289,6 +327,28 @@
     let pendingFixedTxs = [];
 
     document.getElementById('date').valueAsDate = new Date();
+
+    // Modal voor Beginsaldi
+    function openSettingsModal() {
+      document.getElementById('initBalTim').value = initialBalances.Tim || 0;
+      document.getElementById('initBalVeerle').value = initialBalances.Veerle || 0;
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+
+    function saveInitialBalances() {
+      const timVal = parseFloat(document.getElementById('initBalTim').value) || 0;
+      const veerleVal = parseFloat(document.getElementById('initBalVeerle').value) || 0;
+
+      initialBalances = { Tim: timVal, Veerle: veerleVal };
+      localStorage.setItem('financien_initial_balances', JSON.stringify(initialBalances));
+
+      closeSettingsModal();
+      renderAll();
+    }
 
     // Render de categorie-dropdowns
     function renderCategoryDropdown() {
@@ -388,24 +448,20 @@
       document.getElementById('amount').value = tx.amount;
       document.getElementById('type').value = tx.type;
 
-      // Zorg dat de categorie erbij staat (ook als deze later verwijderd is)
       if (!categories.includes(tx.category)) {
         categories.push(tx.category);
         renderCategoryDropdown();
       }
       document.getElementById('category').value = tx.category;
 
-      // Pas de titel en knoppen van het formulier aan
       document.getElementById('formTitle').innerText = "Transactie Bewerken";
       document.getElementById('submitBtn').innerText = "Wijzigingen opslaan";
       document.getElementById('submitBtn').className = "w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 rounded-lg transition text-sm";
       document.getElementById('cancelEditBtn').classList.remove('hidden');
 
-      // Scroll naar het formulier op mobiel
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Formulier herstellen naar beginstand
     function resetForm() {
       document.getElementById('editId').value = '';
       document.getElementById('description').value = '';
@@ -635,7 +691,9 @@
     }
 
     function renderStats() {
-      let balTim = 0, balVeerle = 0;
+      // Begin met de ingestelde beginsaldi
+      let balTim = initialBalances.Tim || 0;
+      let balVeerle = initialBalances.Veerle || 0;
       let expFiltered = 0, incFiltered = 0;
 
       const selectedMonth = document.getElementById('monthFilter').value;
