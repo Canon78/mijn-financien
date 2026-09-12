@@ -684,14 +684,14 @@
 
       const selectedMonth = document.getElementById('monthFilter').value;
 
-      // Berekening actuele bankstanden (over alle transacties heen)
+      // Berekening bankstanden (over alle transacties heen)
       transactions.forEach(t => {
         const val = t.type === 'inkomst' ? t.amount : -t.amount;
         if (t.account === 'Rekening Tim') balTim += val;
         if (t.account === 'Rekening Veerle') balVeerle += val;
       });
 
-      // Berekening gefilterde inkomsten & uitgaven (per gekozen maand/rekening)
+      // Berekening gefilterde inkomsten & uitgaven van de geselecteerde maand/rekening
       const filtered = getFilteredTransactions();
       filtered.forEach(t => {
         if (t.category !== 'Overschrijving Tim <-> Veerle') {
