@@ -37,11 +37,11 @@
     <!-- Stat Kaarten -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-blue-500">
-        <span class="text-xs font-semibold text-gray-400 uppercase">Saldo Tim (Bank)</span>
+        <span class="text-xs font-semibold text-gray-400 uppercase">Saldo Tim (Huidig)</span>
         <p id="balTim" class="text-2xl font-bold text-blue-600">€0,00</p>
       </div>
       <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-purple-500">
-        <span class="text-xs font-semibold text-gray-400 uppercase">Saldo Veerle (Bank)</span>
+        <span class="text-xs font-semibold text-gray-400 uppercase">Saldo Veerle (Huidig)</span>
         <p id="balVeerle" class="text-2xl font-bold text-purple-600">€0,00</p>
       </div>
       <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-red-500">
@@ -55,7 +55,7 @@
       <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
         <div>
           <h2 class="text-lg font-bold text-gray-700">⚖️ Vergelijk Twee Maanden</h2>
-          <p class="text-xs text-gray-400">Selecteer twee maanden om te zien hoeveel er binnenkwam, uitging en overbleef</p>
+          <p class="text-xs text-gray-400">Vergelijk inkomsten, uitgaven en de werkelijke bankstand aan het einde van de maand</p>
         </div>
         <div class="flex gap-2">
           <select id="compareMonthA" onchange="renderComparison()" class="bg-gray-50 border p-2 text-xs font-semibold rounded-lg outline-none"></select>
@@ -785,7 +785,25 @@
         }
       });
 
-      return { inc, exp };
+      let endBalance = 0;
+      if (activeAccountFilter === 'Totaal') {
+        endBalance = (initialBalances.Tim || 0) + (initialBalances.Veerle || 0);
+      } else if (activeAccountFilter === 'Rekening Tim') {
+        endBalance = initialBalances.Tim || 0;
+      } else if (activeAccountFilter === 'Rekening Veerle') {
+        endBalance = initialBalances.Veerle || 0;
+      }
+
+      transactions.forEach(t => {
+        if (t.date && t.date.substring(0, 7) <= monthKey) {
+          if (activeAccountFilter === 'Totaal' || t.account === activeAccountFilter) {
+            const val = t.type === 'inkomst' ? Number(t.amount) : -Number(t.amount);
+            endBalance += val;
+          }
+        }
+      });
+
+      return { inc, exp, endBalance };
     }
 
     function renderComparison() {
@@ -801,41 +819,36 @@
       const statsA = getMonthStats(mA);
       const statsB = getMonthStats(mB);
 
-      const netA = statsA.inc - statsA.exp;
-      const netB = statsB.inc - statsB.exp;
-
       container.innerHTML = `
-        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-2">
+        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-3">
           <div class="flex justify-between items-center">
             <span class="font-bold text-gray-800">${mA}</span>
-            <span class="text-xs px-2 py-0.5 rounded ${netA >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-semibold">
-              ${netA >= 0 ? 'Overschot' : 'Tekort'}
-            </span>
           </div>
+          
           <div class="text-xs text-gray-500 space-y-1">
             <div class="flex justify-between"><span>Inkomsten:</span><span class="text-green-600 font-medium">+€${statsA.inc.toFixed(2)}</span></div>
             <div class="flex justify-between"><span>Uitgaven:</span><span class="text-red-600 font-medium">-€${statsA.exp.toFixed(2)}</span></div>
-            <div class="flex justify-between font-bold pt-2 border-t text-gray-800 text-sm">
-              <span>Overgebleven deze maand:</span>
-              <span class="${netA >= 0 ? 'text-green-600' : 'text-red-600'}">€${netA.toFixed(2)}</span>
-            </div>
+          </div>
+
+          <div class="pt-2 border-t border-gray-200 flex justify-between items-center text-sm font-bold text-gray-800">
+            <span>Eindsaldo Bank (${mA}):</span>
+            <span class="${statsA.endBalance >= 0 ? 'text-blue-600' : 'text-red-600'}">€${statsA.endBalance.toFixed(2)}</span>
           </div>
         </div>
 
-        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-2">
+        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-3">
           <div class="flex justify-between items-center">
             <span class="font-bold text-gray-800">${mB}</span>
-            <span class="text-xs px-2 py-0.5 rounded ${netB >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-semibold">
-              ${netB >= 0 ? 'Overschot' : 'Tekort'}
-            </span>
           </div>
+          
           <div class="text-xs text-gray-500 space-y-1">
             <div class="flex justify-between"><span>Inkomsten:</span><span class="text-green-600 font-medium">+€${statsB.inc.toFixed(2)}</span></div>
             <div class="flex justify-between"><span>Uitgaven:</span><span class="text-red-600 font-medium">-€${statsB.exp.toFixed(2)}</span></div>
-            <div class="flex justify-between font-bold pt-2 border-t text-gray-800 text-sm">
-              <span>Overgebleven deze maand:</span>
-              <span class="${netB >= 0 ? 'text-green-600' : 'text-red-600'}">€${netB.toFixed(2)}</span>
-            </div>
+          </div>
+
+          <div class="pt-2 border-t border-gray-200 flex justify-between items-center text-sm font-bold text-gray-800">
+            <span>Eindsaldo Bank (${mB}):</span>
+            <span class="${statsB.endBalance >= 0 ? 'text-blue-600' : 'text-red-600'}">€${statsB.endBalance.toFixed(2)}</span>
           </div>
         </div>
       `;
