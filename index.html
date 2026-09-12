@@ -116,13 +116,15 @@
 
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="block text-xs font-semibold text-gray-600">Categorie</label>
+              <label class="block text-xs font-semibold text-gray-600">Categorie (Typ om te zoeken)</label>
               <button type="button" onclick="openCategoryModal()" class="text-[11px] text-blue-600 hover:underline font-semibold">
-                ➕ Categorie toevoegen / beheren
+                ⚙️ Categorieën beheren
               </button>
             </div>
-            <select id="category" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-            </select>
+            <!-- Slim Invoerveld met Zoekfunctie -->
+            <input type="text" id="category" list="categoryOptions" placeholder="🔍 Typ of kies categorie..." required class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" autocomplete="off">
+            <datalist id="categoryOptions">
+            </datalist>
           </div>
 
           <div class="flex gap-2">
@@ -340,16 +342,16 @@
     }
 
     function renderCategoryDropdown() {
-      const select = document.getElementById('category');
+      const datalist = document.getElementById('categoryOptions');
       const filterSelect = document.getElementById('filterCategory');
       
       const currentFilterVal = filterSelect.value;
 
-      select.innerHTML = '';
+      datalist.innerHTML = '';
       filterSelect.innerHTML = '<option value="ALL">📁 Alle categorieën</option>';
 
-      categories.forEach(cat => {
-        select.innerHTML += `<option value="${cat}">${cat}</option>`;
+      categories.sort().forEach(cat => {
+        datalist.innerHTML += `<option value="${cat}">`;
         filterSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
       });
 
@@ -403,14 +405,22 @@
       e.preventDefault();
 
       const editId = document.getElementById('editId').value;
+      const catVal = document.getElementById('category').value.trim() || 'Overig';
       
+      // Als de ingevulde categorie nieuw is, direct opslaan in de lijst
+      if (!categories.includes(catVal)) {
+        categories.push(catVal);
+        localStorage.setItem('financien_categories', JSON.stringify(categories));
+        renderCategoryDropdown();
+      }
+
       const txData = {
         date: document.getElementById('date').value,
         account: document.getElementById('account').value,
         description: document.getElementById('description').value,
         amount: parseFloat(document.getElementById('amount').value),
         type: document.getElementById('type').value,
-        category: document.getElementById('category').value
+        category: catVal
       };
 
       if (editId) {
@@ -439,11 +449,6 @@
       document.getElementById('description').value = tx.description;
       document.getElementById('amount').value = tx.amount;
       document.getElementById('type').value = tx.type;
-
-      if (!categories.includes(tx.category)) {
-        categories.push(tx.category);
-        renderCategoryDropdown();
-      }
       document.getElementById('category').value = tx.category;
 
       document.getElementById('formTitle').innerText = "Transactie Bewerken";
@@ -458,6 +463,7 @@
       document.getElementById('editId').value = '';
       document.getElementById('description').value = '';
       document.getElementById('amount').value = '';
+      document.getElementById('category').value = '';
       document.getElementById('date').valueAsDate = new Date();
       
       document.getElementById('formTitle').innerText = "Nieuwe Transactie";
