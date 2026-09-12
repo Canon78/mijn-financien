@@ -36,9 +36,9 @@
 
     <!-- Stat Kaarten -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-blue-500">
+      <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-green-500">
         <span class="text-xs font-semibold text-gray-400 uppercase">Saldo Tim (Huidig)</span>
-        <p id="balTim" class="text-2xl font-bold text-blue-600">€0,00</p>
+        <p id="balTim" class="text-2xl font-bold text-green-600">€0,00</p>
       </div>
       <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-purple-500">
         <span class="text-xs font-semibold text-gray-400 uppercase">Saldo Veerle (Huidig)</span>
@@ -232,7 +232,7 @@
       <div class="space-y-3">
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1">Beginsaldo Tim (€)</label>
-          <input type="number" step="0.01" id="initBalTim" placeholder="0.00" class="w-full p-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+          <input type="number" step="0.01" id="initBalTim" placeholder="0.00" class="w-full p-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-500">
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1">Beginsaldo Veerle (€)</label>
@@ -674,7 +674,7 @@
         row.innerHTML = `
           <td class="p-3">${tx.date}</td>
           <td class="p-3">
-            <span class="px-2 py-1 rounded text-xs font-semibold ${isTim ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}">
+            <span class="px-2 py-1 rounded text-xs font-semibold ${isTim ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'}">
               ${tx.account}
             </span>
           </td>
@@ -723,8 +723,14 @@
         }
       });
 
-      document.getElementById('balTim').innerText = `€${balTim.toFixed(2)}`;
-      document.getElementById('balVeerle').innerText = `€${balVeerle.toFixed(2)}`;
+      const balTimEl = document.getElementById('balTim');
+      balTimEl.innerText = `€${balTim.toFixed(2)}`;
+      balTimEl.className = `text-2xl font-bold ${balTim >= 0 ? 'text-green-600' : 'text-red-600'}`;
+
+      const balVeerleEl = document.getElementById('balVeerle');
+      balVeerleEl.innerText = `€${balVeerle.toFixed(2)}`;
+      balVeerleEl.className = `text-2xl font-bold ${balVeerle >= 0 ? 'text-purple-600' : 'text-red-600'}`;
+
       document.getElementById('totalExpenses').innerText = `€${expFiltered.toFixed(2)}`;
     }
 
@@ -832,7 +838,7 @@
 
           <div class="pt-2 border-t border-gray-200 flex justify-between items-center text-sm font-bold text-gray-800">
             <span>Eindsaldo Bank (${mA}):</span>
-            <span class="${statsA.endBalance >= 0 ? 'text-blue-600' : 'text-red-600'}">€${statsA.endBalance.toFixed(2)}</span>
+            <span class="${statsA.endBalance >= 0 ? 'text-green-600' : 'text-red-600'}">€${statsA.endBalance.toFixed(2)}</span>
           </div>
         </div>
 
@@ -848,7 +854,7 @@
 
           <div class="pt-2 border-t border-gray-200 flex justify-between items-center text-sm font-bold text-gray-800">
             <span>Eindsaldo Bank (${mB}):</span>
-            <span class="${statsB.endBalance >= 0 ? 'text-blue-600' : 'text-red-600'}">€${statsB.endBalance.toFixed(2)}</span>
+            <span class="${statsB.endBalance >= 0 ? 'text-green-600' : 'text-red-600'}">€${statsB.endBalance.toFixed(2)}</span>
           </div>
         </div>
       `;
