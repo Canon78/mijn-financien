@@ -34,7 +34,7 @@
       </div>
     </header>
 
-    <!-- Stat Kaarten (3 DUIDELIJKE KAARTEN) -->
+    <!-- Stat Kaarten -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-blue-500">
         <span class="text-xs font-semibold text-gray-400 uppercase">Saldo Tim (Bank)</span>
@@ -55,7 +55,7 @@
       <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
         <div>
           <h2 class="text-lg font-bold text-gray-700">⚖️ Vergelijk Twee Maanden</h2>
-          <p class="text-xs text-gray-400">Selecteer twee maanden om de eindstanden inclusief historisch verloop te vergelijken</p>
+          <p class="text-xs text-gray-400">Selecteer twee maanden om te zien hoeveel je overhield en hoe je bankstand veranderde</p>
         </div>
         <div class="flex gap-2">
           <select id="compareMonthA" onchange="renderComparison()" class="bg-gray-50 border p-2 text-xs font-semibold rounded-lg outline-none"></select>
@@ -145,14 +145,54 @@
       </div>
     </div>
 
-    <!-- Tabel -->
+    <!-- Tabel met Uitgebreide Zoek- en Filteropties -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div class="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-        <h2 class="text-lg font-bold text-gray-700">Transactiehistorie</h2>
-        
-        <div class="flex items-center gap-3 w-full md:w-auto">
-          <input type="text" id="searchInput" oninput="currentPage=1; renderTable();" placeholder="🔍 Zoek omschrijving of categorie..." class="w-full md:w-64 p-2 border rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+      <div class="p-4 border-b border-gray-100 flex flex-col gap-3">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+          <h2 class="text-lg font-bold text-gray-700">Transactiehistorie</h2>
           <button onclick="wisAlles()" class="text-xs text-red-500 hover:underline whitespace-nowrap">Alles wissen</button>
+        </div>
+
+        <!-- Zoekbalk & Extra Filters -->
+        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
+          <!-- 1. Zoek op woord -->
+          <div>
+            <label class="block text-gray-500 font-semibold mb-1">Zoekterm</label>
+            <input type="text" id="searchInput" oninput="currentPage=1; renderTable();" placeholder="🔍 Omschrijving..." class="w-full p-2 border rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <!-- 2. Filter op Categorie -->
+          <div>
+            <label class="block text-gray-500 font-semibold mb-1">Categorie</label>
+            <select id="filterCategory" onchange="currentPage=1; renderTable();" class="w-full p-2 border rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="ALL">📁 Alle categorieën</option>
+            </select>
+          </div>
+
+          <!-- 3. Filter op Type -->
+          <div>
+            <label class="block text-gray-500 font-semibold mb-1">Type Transactie</label>
+            <select id="filterType" onchange="currentPage=1; renderTable();" class="w-full p-2 border rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="ALL">🔄 Alle typen</option>
+              <option value="uitgave">➖ Alleen Uitgaven</option>
+              <option value="inkomst">➕ Alleen Inkomsten</option>
+            </select>
+          </div>
+
+          <!-- 4. Min Bedrag -->
+          <div>
+            <label class="block text-gray-500 font-semibold mb-1">Min. Bedrag (€)</label>
+            <input type="number" id="filterMinAmount" oninput="currentPage=1; renderTable();" placeholder="0.00" class="w-full p-2 border rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <!-- 5. Max Bedrag & Wisknop -->
+          <div>
+            <div class="flex justify-between mb-1">
+              <label class="block text-gray-500 font-semibold">Max. Bedrag (€)</label>
+              <button onclick="resetSearchFilters()" class="text-blue-600 hover:underline text-[10px]">Filters wissen</button>
+            </div>
+            <input type="number" id="filterMaxAmount" oninput="currentPage=1; renderTable();" placeholder="Onbeperkt" class="w-full p-2 border rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
         </div>
       </div>
 
@@ -301,10 +341,19 @@
 
     function renderCategoryDropdown() {
       const select = document.getElementById('category');
+      const filterSelect = document.getElementById('filterCategory');
+      
+      const currentFilterVal = filterSelect.value;
+
       select.innerHTML = '';
+      filterSelect.innerHTML = '<option value="ALL">📁 Alle categorieën</option>';
+
       categories.forEach(cat => {
         select.innerHTML += `<option value="${cat}">${cat}</option>`;
+        filterSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
       });
+
+      filterSelect.value = currentFilterVal || 'ALL';
     }
 
     function openCategoryModal() {
@@ -423,10 +472,10 @@
         return;
       }
 
-      const months = Array.from(new Set(transactions.map(t => t.date.substring(0, 7)))).sort().reverse();
+      const months = Array.from(new Set(transactions.map(t => t.date ? t.date.substring(0, 7) : ''))).filter(Boolean).sort().reverse();
       const lastMonth = months[0];
 
-      pendingFixedTxs = transactions.filter(t => t.date.startsWith(lastMonth) && fixedCategories.includes(t.category));
+      pendingFixedTxs = transactions.filter(t => t.date && t.date.startsWith(lastMonth) && fixedCategories.includes(t.category));
 
       if (pendingFixedTxs.length === 0) {
         alert(`Geen vaste lasten gevonden in de periode ${lastMonth}.`);
@@ -537,7 +586,9 @@
 
       const months = new Set();
       transactions.forEach(t => {
-        if (t.date) months.add(t.date.substring(0, 7));
+        if (t.date && t.date.length >= 7) {
+          months.add(t.date.substring(0, 7));
+        }
       });
 
       const sortedMonths = Array.from(months).sort().reverse();
@@ -555,15 +606,34 @@
       }
     }
 
+    function resetSearchFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('filterCategory').value = 'ALL';
+      document.getElementById('filterType').value = 'ALL';
+      document.getElementById('filterMinAmount').value = '';
+      document.getElementById('filterMaxAmount').value = '';
+      currentPage = 1;
+      renderTable();
+    }
+
     function getFilteredTransactions() {
       const selectedMonth = document.getElementById('monthFilter').value;
       const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const catFilter = document.getElementById('filterCategory').value;
+      const typeFilter = document.getElementById('filterType').value;
+      const minAmt = parseFloat(document.getElementById('filterMinAmount').value);
+      const maxAmt = parseFloat(document.getElementById('filterMaxAmount').value);
 
       return transactions.filter(t => {
         const matchAccount = activeAccountFilter === 'Totaal' || t.account === activeAccountFilter;
         const matchMonth = selectedMonth === 'ALL' || (t.date && t.date.startsWith(selectedMonth));
-        const matchSearch = t.description.toLowerCase().includes(searchTerm) || t.category.toLowerCase().includes(searchTerm);
-        return matchAccount && matchMonth && matchSearch;
+        const matchSearch = (t.description || '').toLowerCase().includes(searchTerm) || (t.category || '').toLowerCase().includes(searchTerm);
+        const matchCategory = catFilter === 'ALL' || t.category === catFilter;
+        const matchType = typeFilter === 'ALL' || t.type === typeFilter;
+        const matchMin = isNaN(minAmt) || t.amount >= minAmt;
+        const matchMax = isNaN(maxAmt) || t.amount <= maxAmt;
+
+        return matchAccount && matchMonth && matchSearch && matchCategory && matchType && matchMin && matchMax;
       });
     }
 
@@ -585,7 +655,7 @@
       if (currentPage > totalPages) currentPage = totalPages;
 
       if (totalItems === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Geen transacties gevonden.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-400">Geen transacties gevonden voor deze zoekopdracht.</td></tr>`;
         document.getElementById('pageInfo').innerText = '0 resultaten';
         document.getElementById('btnPrev').disabled = true;
         document.getElementById('btnNext').disabled = true;
@@ -643,11 +713,13 @@
         if (t.account === 'Rekening Veerle') balVeerle += val;
       });
 
-      const activeTxs = getFilteredTransactions();
+      const selectedMonth = document.getElementById('monthFilter').value;
       let expFiltered = 0;
 
-      activeTxs.forEach(t => {
-        if (t.category !== 'Overschrijving Tim <-> Veerle' && t.type === 'uitgave') {
+      transactions.forEach(t => {
+        const matchAccount = activeAccountFilter === 'Totaal' || t.account === activeAccountFilter;
+        const matchMonth = selectedMonth === 'ALL' || (t.date && t.date.startsWith(selectedMonth));
+        if (matchAccount && matchMonth && t.category !== 'Overschrijving Tim <-> Veerle' && t.type === 'uitgave') {
           expFiltered += Number(t.amount);
         }
       });
@@ -664,7 +736,13 @@
       const categoryTotals = {};
       let grandTotal = 0;
 
-      const filtered = getFilteredTransactions().filter(t => t.type === 'uitgave' && t.category !== 'Overschrijving Tim <-> Veerle');
+      const selectedMonth = document.getElementById('monthFilter').value;
+
+      const filtered = transactions.filter(t => {
+        const matchAccount = activeAccountFilter === 'Totaal' || t.account === activeAccountFilter;
+        const matchMonth = selectedMonth === 'ALL' || (t.date && t.date.startsWith(selectedMonth));
+        return matchAccount && matchMonth && t.type === 'uitgave' && t.category !== 'Overschrijving Tim <-> Veerle';
+      });
 
       filtered.forEach(t => {
         categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
@@ -699,17 +777,15 @@
     function getMonthStats(monthKey) {
       let inc = 0, exp = 0;
       
-      // 1. Inkomsten en uitgaven van déze specifieke maand
       transactions.forEach(t => {
-        if (t.date && t.date.startsWith(monthKey) && t.category !== 'Overschrijving Tim <-> Veerle') {
+        if (t.date && t.date.substring(0, 7) === monthKey && t.category !== 'Overschrijving Tim <-> Veerle') {
           if (activeAccountFilter === 'Totaal' || t.account === activeAccountFilter) {
-            if (t.type === 'inkomst') inc += t.amount;
-            if (t.type === 'uitgave') exp += t.amount;
+            if (t.type === 'inkomst') inc += Number(t.amount);
+            if (t.type === 'uitgave') exp += Number(t.amount);
           }
         }
       });
 
-      // 2. Haal het beginsaldo/minstand op
       let startBalance = 0;
       if (activeAccountFilter === 'Totaal') {
         startBalance = (initialBalances.Tim || 0) + (initialBalances.Veerle || 0);
@@ -719,18 +795,16 @@
         startBalance = initialBalances.Veerle || 0;
       }
 
-      // 3. Alle transacties VÓÓR deze maand optellen
       let prevTransactionsSum = 0;
       transactions.forEach(t => {
         if (t.date && t.date.substring(0, 7) < monthKey) {
           if (activeAccountFilter === 'Totaal' || t.account === activeAccountFilter) {
-            const val = t.type === 'inkomst' ? t.amount : -t.amount;
+            const val = t.type === 'inkomst' ? Number(t.amount) : -Number(t.amount);
             prevTransactionsSum += val;
           }
         }
       });
 
-      // Het echte eindsaldo aan het einde van deze maand op de bank
       const bankEndBalance = startBalance + prevTransactionsSum + inc - exp;
 
       return { inc, exp, saved: bankEndBalance };
@@ -749,32 +823,49 @@
       const statsA = getMonthStats(mA);
       const statsB = getMonthStats(mB);
 
+      const netA = statsA.inc - statsA.exp;
+      const netB = statsB.inc - statsB.exp;
+
       container.innerHTML = `
         <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-2">
           <div class="flex justify-between items-center">
             <span class="font-bold text-gray-800">${mA}</span>
-            <span class="text-xs px-2 py-0.5 rounded ${statsA.saved >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-semibold">
-              ${statsA.saved >= 0 ? 'Positief' : 'Roodstand'}
+            <span class="text-xs px-2 py-0.5 rounded ${netA >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-semibold">
+              ${netA >= 0 ? 'Overschot' : 'Tekort'}
             </span>
           </div>
           <div class="text-xs text-gray-500 space-y-1">
             <div class="flex justify-between"><span>Inkomsten:</span><span class="text-green-600 font-medium">+€${statsA.inc.toFixed(2)}</span></div>
             <div class="flex justify-between"><span>Uitgaven:</span><span class="text-red-600 font-medium">-€${statsA.exp.toFixed(2)}</span></div>
-            <div class="flex justify-between font-bold pt-1 border-t text-gray-800"><span>Eindsaldo Bank:</span><span>€${statsA.saved.toFixed(2)}</span></div>
+            <div class="flex justify-between font-bold pt-1 border-t text-gray-800">
+              <span>Overgebleven deze maand:</span>
+              <span class="${netA >= 0 ? 'text-green-600' : 'text-red-600'}">€${netA.toFixed(2)}</span>
+            </div>
+            <div class="flex justify-between text-gray-400 text-[11px] pt-1">
+              <span>Eindsaldo Bank:</span>
+              <span>€${statsA.saved.toFixed(2)}</span>
+            </div>
           </div>
         </div>
 
         <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-2">
           <div class="flex justify-between items-center">
             <span class="font-bold text-gray-800">${mB}</span>
-            <span class="text-xs px-2 py-0.5 rounded ${statsB.saved >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-semibold">
-              ${statsB.saved >= 0 ? 'Positief' : 'Roodstand'}
+            <span class="text-xs px-2 py-0.5 rounded ${netB >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-semibold">
+              ${netB >= 0 ? 'Overschot' : 'Tekort'}
             </span>
           </div>
           <div class="text-xs text-gray-500 space-y-1">
             <div class="flex justify-between"><span>Inkomsten:</span><span class="text-green-600 font-medium">+€${statsB.inc.toFixed(2)}</span></div>
             <div class="flex justify-between"><span>Uitgaven:</span><span class="text-red-600 font-medium">-€${statsB.exp.toFixed(2)}</span></div>
-            <div class="flex justify-between font-bold pt-1 border-t text-gray-800"><span>Eindsaldo Bank:</span><span>€${statsB.saved.toFixed(2)}</span></div>
+            <div class="flex justify-between font-bold pt-1 border-t text-gray-800">
+              <span>Overgebleven deze maand:</span>
+              <span class="${netB >= 0 ? 'text-green-600' : 'text-red-600'}">€${netB.toFixed(2)}</span>
+            </div>
+            <div class="flex justify-between text-gray-400 text-[11px] pt-1">
+              <span>Eindsaldo Bank:</span>
+              <span>€${statsB.saved.toFixed(2)}</span>
+            </div>
           </div>
         </div>
       `;
