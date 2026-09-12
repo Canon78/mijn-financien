@@ -34,7 +34,7 @@
       </div>
     </header>
 
-    <!-- Stat Kaarten (3 DUIDELIJKE KAARTEN) -->
+    <!-- Stat Kaarten -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-blue-500">
         <span class="text-xs font-semibold text-gray-400 uppercase">Saldo Tim (Bank)</span>
@@ -55,7 +55,7 @@
       <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
         <div>
           <h2 class="text-lg font-bold text-gray-700">⚖️ Vergelijk Twee Maanden</h2>
-          <p class="text-xs text-gray-400">Selecteer twee maanden om de eindstanden inclusief historisch verloop te vergelijken</p>
+          <p class="text-xs text-gray-400">Selecteer twee maanden om te zien hoeveel je overhield en hoe je bankstand veranderde</p>
         </div>
         <div class="flex gap-2">
           <select id="compareMonthA" onchange="renderComparison()" class="bg-gray-50 border p-2 text-xs font-semibold rounded-lg outline-none"></select>
@@ -749,32 +749,50 @@
       const statsA = getMonthStats(mA);
       const statsB = getMonthStats(mB);
 
+      // Bereken wat er puur in die specifieke maand is overgebleven (netto resultaat)
+      const netA = statsA.inc - statsA.exp;
+      const netB = statsB.inc - statsB.exp;
+
       container.innerHTML = `
         <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-2">
           <div class="flex justify-between items-center">
             <span class="font-bold text-gray-800">${mA}</span>
-            <span class="text-xs px-2 py-0.5 rounded ${statsA.saved >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-semibold">
-              ${statsA.saved >= 0 ? 'Positief' : 'Roodstand'}
+            <span class="text-xs px-2 py-0.5 rounded ${netA >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-semibold">
+              ${netA >= 0 ? 'Overschot' : 'Tekort'}
             </span>
           </div>
           <div class="text-xs text-gray-500 space-y-1">
             <div class="flex justify-between"><span>Inkomsten:</span><span class="text-green-600 font-medium">+€${statsA.inc.toFixed(2)}</span></div>
             <div class="flex justify-between"><span>Uitgaven:</span><span class="text-red-600 font-medium">-€${statsA.exp.toFixed(2)}</span></div>
-            <div class="flex justify-between font-bold pt-1 border-t text-gray-800"><span>Eindsaldo Bank:</span><span>€${statsA.saved.toFixed(2)}</span></div>
+            <div class="flex justify-between font-bold pt-1 border-t text-gray-800">
+              <span>Overgebleven deze maand:</span>
+              <span class="${netA >= 0 ? 'text-green-600' : 'text-red-600'}">€${netA.toFixed(2)}</span>
+            </div>
+            <div class="flex justify-between text-gray-400 text-[11px] pt-1">
+              <span>Eindsaldo Bank:</span>
+              <span>€${statsA.saved.toFixed(2)}</span>
+            </div>
           </div>
         </div>
 
         <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-2">
           <div class="flex justify-between items-center">
             <span class="font-bold text-gray-800">${mB}</span>
-            <span class="text-xs px-2 py-0.5 rounded ${statsB.saved >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-semibold">
-              ${statsB.saved >= 0 ? 'Positief' : 'Roodstand'}
+            <span class="text-xs px-2 py-0.5 rounded ${netB >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-semibold">
+              ${netB >= 0 ? 'Overschot' : 'Tekort'}
             </span>
           </div>
           <div class="text-xs text-gray-500 space-y-1">
             <div class="flex justify-between"><span>Inkomsten:</span><span class="text-green-600 font-medium">+€${statsB.inc.toFixed(2)}</span></div>
             <div class="flex justify-between"><span>Uitgaven:</span><span class="text-red-600 font-medium">-€${statsB.exp.toFixed(2)}</span></div>
-            <div class="flex justify-between font-bold pt-1 border-t text-gray-800"><span>Eindsaldo Bank:</span><span>€${statsB.saved.toFixed(2)}</span></div>
+            <div class="flex justify-between font-bold pt-1 border-t text-gray-800">
+              <span>Overgebleven deze maand:</span>
+              <span class="${netB >= 0 ? 'text-green-600' : 'text-red-600'}">€${netB.toFixed(2)}</span>
+            </div>
+            <div class="flex justify-between text-gray-400 text-[11px] pt-1">
+              <span>Eindsaldo Bank:</span>
+              <span>€${statsB.saved.toFixed(2)}</span>
+            </div>
           </div>
         </div>
       `;
