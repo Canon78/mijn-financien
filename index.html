@@ -18,17 +18,14 @@
 
       <!-- Filters & Instellingen -->
       <div class="flex flex-wrap items-center gap-3">
-        <!-- Beginsaldi Knop -->
         <button onclick="openSettingsModal()" class="bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 text-xs rounded-lg px-3 py-2 font-semibold outline-none flex items-center gap-1 transition">
           ⚙️ Beginsaldi
         </button>
 
-        <!-- Maand Selectie -->
         <select id="monthFilter" onchange="renderAll()" class="bg-gray-100 border border-gray-300 text-gray-800 text-xs rounded-lg p-2 font-semibold outline-none">
           <option value="ALL">🗓️ Alle Maanden</option>
         </select>
 
-        <!-- Rekening Filter -->
         <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
           <button onclick="setFilter('Totaal')" id="btnTotaal" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-white shadow-sm text-gray-800">Totaal</button>
           <button onclick="setFilter('Rekening Tim')" id="btnTim" class="px-3 py-1.5 text-xs font-semibold rounded-md text-gray-600 hover:text-gray-900">Tim</button>
@@ -37,8 +34,8 @@
       </div>
     </header>
 
-    <!-- Stat Kaarten -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <!-- Stat Kaarten (AANGEPAST: 3 duidelijke kaarten) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-blue-500">
         <span class="text-xs font-semibold text-gray-400 uppercase">Saldo Tim (Bank)</span>
         <p id="balTim" class="text-2xl font-bold text-blue-600">€0,00</p>
@@ -51,10 +48,6 @@
         <span class="text-xs font-semibold text-gray-400 uppercase">Uitgaven (<span id="lblFilterExp">Geselecteerd</span>)</span>
         <p id="totalExpenses" class="text-2xl font-bold text-red-600">€0,00</p>
       </div>
-      <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-green-500">
-        <span class="text-xs font-semibold text-gray-400 uppercase">Gespaard (<span id="lblFilterMonth">Periode</span>)</span>
-        <p id="totalNet" class="text-2xl font-bold text-green-600">€0,00</p>
-      </div>
     </div>
 
     <!-- Maand Vergelijker Tool -->
@@ -62,7 +55,7 @@
       <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
         <div>
           <h2 class="text-lg font-bold text-gray-700">⚖️ Vergelijk Twee Maanden</h2>
-          <p class="text-xs text-gray-400">Selecteer twee maanden om het spaarresultaat direct te vergelijken</p>
+          <p class="text-xs text-gray-400">Selecteer twee maanden om het maandresultaat direct te vergelijken</p>
         </div>
         <div class="flex gap-2">
           <select id="compareMonthA" onchange="renderComparison()" class="bg-gray-50 border p-2 text-xs font-semibold rounded-lg outline-none"></select>
@@ -72,14 +65,11 @@
       </div>
 
       <div id="comparisonContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Dynamisch gevuld -->
       </div>
     </div>
 
     <!-- Formulier & Categorie Ranglijst -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      
-      <!-- Transactie Invoeren & Bewerken -->
       <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <div class="flex justify-between items-center mb-4">
           <h2 id="formTitle" class="text-lg font-bold text-gray-700">Nieuwe Transactie</h2>
@@ -107,7 +97,7 @@
 
           <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">Omschrijving</label>
-            <input type="text" id="description" placeholder="bijv. Afbetaling auto, Pretpark, Hotel booking" required class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <input type="text" id="description" placeholder="bijv. Afbetaling auto, Pretpark" required class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
           </div>
 
           <div class="grid grid-cols-2 gap-2">
@@ -132,7 +122,6 @@
               </button>
             </div>
             <select id="category" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-              <!-- Dynamisch gevuld via JS -->
             </select>
           </div>
 
@@ -147,19 +136,16 @@
         </form>
       </div>
 
-      <!-- Uitgaven Ranglijst -->
       <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <h2 class="text-lg font-bold text-gray-700 mb-1">Waar ging het geld naartoe?</h2>
         <p class="text-xs text-gray-400 mb-4">Rangschikking van geselecteerde periode</p>
 
         <div id="categoryRanking" class="space-y-4 max-h-[380px] overflow-y-auto pr-2">
-          <!-- Dynamische lijst -->
         </div>
       </div>
-
     </div>
 
-    <!-- Tabel met Transacties + Zoekbalk + Paginering -->
+    <!-- Tabel -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <div class="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <h2 class="text-lg font-bold text-gray-700">Transactiehistorie</h2>
@@ -187,7 +173,6 @@
         </table>
       </div>
 
-      <!-- Paginering Controls -->
       <div class="p-4 border-t border-gray-100 flex justify-between items-center bg-gray-50 text-xs text-gray-500">
         <span id="pageInfo">Transacties tonen...</span>
         <div class="flex items-center gap-2">
@@ -200,16 +185,14 @@
 
   </div>
 
-  <!-- POP-UP DIALOOGVENSTER VOOR BEGINSALDI INSTELLEN -->
+  <!-- MODALS -->
   <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden p-4 z-50">
     <div class="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
         <h3 class="font-bold text-gray-800 text-base">⚙️ Beginsaldi Instellen</h3>
         <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-gray-600 font-bold">&times;</button>
       </div>
-      
       <p class="text-xs text-gray-500">Stel hier het startsaldo in op het moment dat je bent begonnen met invoeren (gebruik minteken voor roodstand, bijv. -200.00):</p>
-
       <div class="space-y-3">
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1">Beginsaldo Tim (€)</label>
@@ -220,73 +203,46 @@
           <input type="number" step="0.01" id="initBalVeerle" placeholder="0.00" class="w-full p-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-purple-500">
         </div>
       </div>
-
       <div class="flex gap-2 pt-2 border-t">
-        <button onclick="closeSettingsModal()" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-xs font-semibold transition">
-          Annuleren
-        </button>
-        <button onclick="saveInitialBalances()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-semibold transition">
-          Opslaan
-        </button>
+        <button onclick="closeSettingsModal()" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-xs font-semibold transition">Annuleren</button>
+        <button onclick="saveInitialBalances()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-semibold transition">Opslaan</button>
       </div>
     </div>
   </div>
 
-  <!-- POP-UP DIALOOGVENSTER VOOR VASTE LASTEN SELECTIE -->
   <div id="vasteLastenModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden p-4 z-50">
     <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
         <h3 class="font-bold text-gray-800 text-base">Selecteer Vaste Lasten</h3>
         <button onclick="closeVasteLastenModal()" class="text-gray-400 hover:text-gray-600 font-bold">&times;</button>
       </div>
-      
       <p class="text-xs text-gray-500">Vink hieronder de posten aan die je wilt kopiëren naar de nieuwe maand:</p>
-
-      <div id="vasteLastenList" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-        <!-- Dynamisch gevuld met checkboxen -->
-      </div>
-
+      <div id="vasteLastenList" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
       <div class="flex justify-between items-center pt-2 border-t">
         <button onclick="toggleSelectAllModal(true)" class="text-xs text-blue-600 hover:underline font-medium">Alles selecteren</button>
         <button onclick="toggleSelectAllModal(false)" class="text-xs text-gray-500 hover:underline">Alles deselecteren</button>
       </div>
-
       <div class="flex gap-2 pt-2">
-        <button onclick="closeVasteLastenModal()" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-xs font-semibold transition">
-          Annuleren
-        </button>
-        <button onclick="bevestigKopiërenVasteLasten()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-semibold transition">
-          Kopiëren
-        </button>
+        <button onclick="closeVasteLastenModal()" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-xs font-semibold transition">Annuleren</button>
+        <button onclick="bevestigKopiërenVasteLasten()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-semibold transition">Kopiëren</button>
       </div>
     </div>
   </div>
 
-  <!-- POP-UP DIALOOGVENSTER VOOR CATEGORIEËN BEHEREN -->
   <div id="categoryModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden p-4 z-50">
     <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
         <h3 class="font-bold text-gray-800 text-base">Categorieën Beheren</h3>
         <button onclick="closeCategoryModal()" class="text-gray-400 hover:text-gray-600 font-bold">&times;</button>
       </div>
-      
       <div class="flex gap-2">
         <input type="text" id="newCategoryInput" placeholder="Nieuwe categorienaam..." class="w-full p-2 border rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
-        <button onclick="addNewCategory()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition whitespace-nowrap">
-          Toevoegen
-        </button>
+        <button onclick="addNewCategory()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition whitespace-nowrap">Toevoegen</button>
       </div>
-
       <p class="text-xs text-gray-400">Bestaande categorieën:</p>
-
-      <div id="categoryManageList" class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
-        <!-- Dynamisch gevuld -->
-      </div>
-
+      <div id="categoryManageList" class="space-y-1.5 max-h-56 overflow-y-auto pr-1"></div>
       <div class="pt-2 border-t">
-        <button onclick="closeCategoryModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-xs font-semibold transition">
-          Sluiten
-        </button>
+        <button onclick="closeCategoryModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-xs font-semibold transition">Sluiten</button>
       </div>
     </div>
   </div>
@@ -680,34 +636,25 @@
     function renderStats() {
       let balTim = initialBalances.Tim || 0;
       let balVeerle = initialBalances.Veerle || 0;
-      let expFiltered = 0, incFiltered = 0;
 
-      const selectedMonth = document.getElementById('monthFilter').value;
-
-      // Berekening bankstanden (over alle transacties heen)
       transactions.forEach(t => {
         const val = t.type === 'inkomst' ? t.amount : -t.amount;
         if (t.account === 'Rekening Tim') balTim += val;
         if (t.account === 'Rekening Veerle') balVeerle += val;
       });
 
-      // Berekening gefilterde inkomsten & uitgaven van de geselecteerde maand/rekening
-      const filtered = getFilteredTransactions();
-      filtered.forEach(t => {
-        if (t.category !== 'Overschrijving Tim <-> Veerle') {
-          if (t.type === 'uitgave') expFiltered += t.amount;
-          if (t.type === 'inkomst') incFiltered += t.amount;
+      const activeTxs = getFilteredTransactions();
+      let expFiltered = 0;
+
+      activeTxs.forEach(t => {
+        if (t.category !== 'Overschrijving Tim <-> Veerle' && t.type === 'uitgave') {
+          expFiltered += Number(t.amount);
         }
       });
 
       document.getElementById('balTim').innerText = `€${balTim.toFixed(2)}`;
       document.getElementById('balVeerle').innerText = `€${balVeerle.toFixed(2)}`;
       document.getElementById('totalExpenses').innerText = `€${expFiltered.toFixed(2)}`;
-      
-      // Gespaard = Gefilterde Inkomsten MIN Gefilterde Uitgaven
-      const savedAmount = incFiltered - expFiltered;
-      document.getElementById('totalNet').innerText = `€${savedAmount.toFixed(2)}`;
-      document.getElementById('lblFilterMonth').innerText = selectedMonth === 'ALL' ? 'Totaal' : selectedMonth;
     }
 
     function renderRanking() {
@@ -780,13 +727,13 @@
           <div class="flex justify-between items-center">
             <span class="font-bold text-gray-800">${mA}</span>
             <span class="text-xs px-2 py-0.5 rounded ${statsA.saved >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-semibold">
-              ${statsA.saved >= 0 ? 'Gespaard' : 'Tekort'}
+              ${statsA.saved >= 0 ? 'Overschot' : 'Tekort'}
             </span>
           </div>
           <div class="text-xs text-gray-500 space-y-1">
             <div class="flex justify-between"><span>Inkomsten:</span><span class="text-green-600 font-medium">+€${statsA.inc.toFixed(2)}</span></div>
             <div class="flex justify-between"><span>Uitgaven:</span><span class="text-red-600 font-medium">-€${statsA.exp.toFixed(2)}</span></div>
-            <div class="flex justify-between font-bold pt-1 border-t text-gray-800"><span>Netto:</span><span>€${statsA.saved.toFixed(2)}</span></div>
+            <div class="flex justify-between font-bold pt-1 border-t text-gray-800"><span>Resultaat:</span><span>€${statsA.saved.toFixed(2)}</span></div>
           </div>
         </div>
 
@@ -794,13 +741,13 @@
           <div class="flex justify-between items-center">
             <span class="font-bold text-gray-800">${mB}</span>
             <span class="text-xs px-2 py-0.5 rounded ${statsB.saved >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} font-semibold">
-              ${statsB.saved >= 0 ? 'Gespaard' : 'Tekort'}
+              ${statsB.saved >= 0 ? 'Overschot' : 'Tekort'}
             </span>
           </div>
           <div class="text-xs text-gray-500 space-y-1">
             <div class="flex justify-between"><span>Inkomsten:</span><span class="text-green-600 font-medium">+€${statsB.inc.toFixed(2)}</span></div>
             <div class="flex justify-between"><span>Uitgaven:</span><span class="text-red-600 font-medium">-€${statsB.exp.toFixed(2)}</span></div>
-            <div class="flex justify-between font-bold pt-1 border-t text-gray-800"><span>Netto:</span><span>€${statsB.saved.toFixed(2)}</span></div>
+            <div class="flex justify-between font-bold pt-1 border-t text-gray-800"><span>Resultaat:</span><span>€${statsB.saved.toFixed(2)}</span></div>
           </div>
         </div>
       `;
