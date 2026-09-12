@@ -119,43 +119,14 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Categorie</label>
+            <div class="flex justify-between items-center mb-1">
+              <label class="block text-xs font-semibold text-gray-600">Categorie</label>
+              <button type="button" onclick="openCategoryModal()" class="text-[11px] text-blue-600 hover:underline font-semibold">
+                ➕ Categorie toevoegen / beheren
+              </button>
+            </div>
             <select id="category" class="w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-              <optgroup label="💳 Leningen & Afbetalingen">
-                <option value="Afbetaling Auto">Afbetaling Auto</option>
-                <option value="Persoonlijke Lening">Persoonlijke Lening</option>
-                <option value="Krediet / Visakaart">Krediet / Visakaart</option>
-              </optgroup>
-              <optgroup label="🏠 Wonen & Vaste Lasten">
-                <option value="Huur / Hypotheek">Huur / Hypotheek</option>
-                <option value="Gas / Water / Licht">Gas / Water / Licht</option>
-                <option value="Verzekeringen">Verzekeringen</option>
-                <option value="Internet & Telefonie">Internet & Telefonie</option>
-                <option value="Huis & Tuin / Klussen">Huis & Tuin / Klussen</option>
-              </optgroup>
-              <optgroup label="🛒 Dagelijks Leven">
-                <option value="Boodschappen & Supermarkt">Boodschappen & Supermarkt</option>
-                <option value="Drogisterij & Verzorging">Drogisterij & Verzorging</option>
-                <option value="Kinderen / Opvang">Kinderen / Opvang</option>
-              </optgroup>
-              <optgroup label="🚗 Transport & Auto">
-                <option value="Brandstof / Opladen">Brandstof / Opladen</option>
-                <option value="OV / Trein / Bus">OV / Trein / Bus</option>
-                <option value="Auto onderhoud / Belasting">Auto onderhoud / Belasting</option>
-              </optgroup>
-              <optgroup label="🎉 Vrije Tijd & Ontspanning">
-                <option value="Horeca & Restaurants">Horeca & Restaurants</option>
-                <option value="Dagjes Uit & Uitstapjes">Dagjes Uit & Uitstapjes</option>
-                <option value="Vakantie & Reizen">Vakantie & Reizen</option>
-                <option value="Abonnementen">Abonnementen</option>
-                <option value="Kleding & Shoppen">Kleding & Shoppen</option>
-                <option value="Cadeaus & Feestjes">Cadeaus & Feestjes</option>
-              </optgroup>
-              <optgroup label="🔄 Overig">
-                <option value="Salaris / Inkomsten">Salaris / Inkomsten</option>
-                <option value="Overschrijving Tim <-> Veerle">Overschrijving Tim &lt;-&gt; Veerle</option>
-                <option value="Overig">Overig</option>
-              </optgroup>
+              <!-- Dynamisch gevuld via JS -->
             </select>
           </div>
 
@@ -249,10 +220,55 @@
     </div>
   </div>
 
+  <!-- POP-UP DIALOOGVENSTER VOOR CATEGORIEËN BEHEREN -->
+  <div id="categoryModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center hidden p-4 z-50">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-gray-800 text-base">Categorieën Beheren</h3>
+        <button onclick="closeCategoryModal()" class="text-gray-400 hover:text-gray-600 font-bold">&times;</button>
+      </div>
+      
+      <!-- Nieuwe categorie toevoegen -->
+      <div class="flex gap-2">
+        <input type="text" id="newCategoryInput" placeholder="Nieuwe categorienaam..." class="w-full p-2 border rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500">
+        <button onclick="addNewCategory()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold transition whitespace-nowrap">
+          Toevoegen
+        </button>
+      </div>
+
+      <p class="text-xs text-gray-400">Bestaande categorieën:</p>
+
+      <!-- Lijst van categorieën -->
+      <div id="categoryManageList" class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+        <!-- Dynamisch gevuld -->
+      </div>
+
+      <div class="pt-2 border-t">
+        <button onclick="closeCategoryModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-xs font-semibold transition">
+          Sluiten
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let transactions = JSON.parse(localStorage.getItem('financien_tim_veerle')) || [];
-    let activeAccountFilter = 'Totaal';
     
+    // Standaard categorieën als er nog niks in localStorage staat
+    const defaultCategories = [
+      'Afbetaling Auto', 'Persoonlijke Lening', 'Krediet / Visakaart',
+      'Huur / Hypotheek', 'Gas / Water / Licht', 'Verzekeringen', 
+      'Internet & Telefonie', 'Huis & Tuin / Klussen',
+      'Boodschappen & Supermarkt', 'Drogisterij & Verzorging', 'Kinderen / Opvang',
+      'Brandstof / Opladen', 'OV / Trein / Bus', 'Auto onderhoud / Belasting',
+      'Horeca & Restaurants', 'Dagjes Uit & Uitstapjes', 'Vakantie & Reizen', 
+      'Abonnementen', 'Kleding & Shoppen', 'Cadeaus & Feestjes',
+      'Salaris / Inkomsten', 'Overschrijving Tim <-> Veerle', 'Overig'
+    ];
+
+    let categories = JSON.parse(localStorage.getItem('financien_categories')) || defaultCategories;
+
+    let activeAccountFilter = 'Totaal';
     let currentPage = 1;
     const itemsPerPage = 10;
 
@@ -266,6 +282,59 @@
     let pendingFixedTxs = []; // Tijdelijke opslag voor modal
 
     document.getElementById('date').valueAsDate = new Date();
+
+    // Render de categorie-dropdowns
+    function renderCategoryDropdown() {
+      const select = document.getElementById('category');
+      select.innerHTML = '';
+      categories.forEach(cat => {
+        select.innerHTML += `<option value="${cat}">${cat}</option>`;
+      });
+    }
+
+    // Modal categorieën beheren
+    function openCategoryModal() {
+      renderCategoryManageList();
+      document.getElementById('categoryModal').classList.remove('hidden');
+    }
+
+    function closeCategoryModal() {
+      document.getElementById('categoryModal').classList.add('hidden');
+    }
+
+    function renderCategoryManageList() {
+      const list = document.getElementById('categoryManageList');
+      list.innerHTML = '';
+      categories.forEach((cat, index) => {
+        list.innerHTML += `
+          <div class="flex justify-between items-center p-2 bg-gray-50 border rounded-lg text-xs">
+            <span class="font-medium text-gray-700">${cat}</span>
+            <button onclick="removeCategory(${index})" class="text-red-400 hover:text-red-600 font-semibold text-[11px]">Verwijder</button>
+          </div>
+        `;
+      });
+    }
+
+    function addNewCategory() {
+      const input = document.getElementById('newCategoryInput');
+      const val = input.value.trim();
+      if (val && !categories.includes(val)) {
+        categories.push(val);
+        localStorage.setItem('financien_categories', JSON.stringify(categories));
+        input.value = '';
+        renderCategoryManageList();
+        renderCategoryDropdown();
+      }
+    }
+
+    function removeCategory(index) {
+      if (confirm(`Wil je de categorie "${categories[index]}" verwijderen?`)) {
+        categories.splice(index, 1);
+        localStorage.setItem('financien_categories', JSON.stringify(categories));
+        renderCategoryManageList();
+        renderCategoryDropdown();
+      }
+    }
 
     document.getElementById('transactionForm').addEventListener('submit', function(e) {
       e.preventDefault();
@@ -639,6 +708,7 @@
       }
     }
 
+    renderCategoryDropdown();
     updateDropdowns();
     renderAll();
   </script>
